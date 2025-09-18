@@ -1,36 +1,47 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# ClassSight
 
-## Getting Started
+-----一个课堂行为洞察系统
 
-First, run the development server:
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 简介：
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+  和一个朋友一起做的大创项目，他主要负责实体设备以及对应模型，由于缺了个对应的搞开发的，所以拉上了我。我就受邀来进行这个项目前端后端的开发了。目前只考虑web端，未来时间如果有空余我也有可能实现客户端。项目正如其名，是一个类似学习通的系统，不过是plus版的，将会和我朋友的”小黑盒“结合，通过摄像设备和大模型来进行课堂上学生考勤数据、专注度、举手次数等等数据的统计和展示。目前我的项目和他的模型都正在开发中，所以先写下这个文章作为一个整体的概览。（希望这样的系统永远不会上线把，想我这样经常旷课的人绝对和这样的系统水火不容啊，虽然作为了这个cs项目的开发者但我还是觉得这玩意实在太恐怖了Σヽ(ﾟД ﾟ; )ﾉ）
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
-## Learn More
 
-To learn more about Next.js, take a look at the following resources:
+## 项目概览
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+- 项目主要使用nextjs作为前后端的开发框架
+- 使用prisma + postgres sql来构建和控制数据库
+- 预计使用ssh2 promise来进行和小黑盒的数据交互
+- 使用docker来部署到现有的实体服务器上
+- 之后使用的其他第三方库会慢慢添加上来
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## 项目结构
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+- 分为学生、教师、管理员三端
+  - 学生通过该系统来查看自己所选的课程以及相应课程老师、上课时间以及自己的课堂表现
+  - 老师通过该系统来查看自己所教的课程以及相应课程学生、上课时间以及学生们的课堂表现
+  - 管理员来进行相应重要数据的管理和创建
+- 一般数据直接通过简单前后端的交互添加进数据库中，部分课堂表现数据得通过”小黑盒“设备通过ssh连接传输给服务器由后端处理
+
+
+
+## 项目难点
+
+个人认为项目在开发过程中可能会遇到的卡点
+
+- 服务器端和”小黑盒“设备的交互 
+- 项目的部署以及正常运行（个人缺乏相关经验）
+- 部分数据传输的及时性，会有频繁的请求以及web测的刷新，会很影响性能
+
+
+
+
+
+## 后记
+
+  能被朋友邀请来开发这个项目实在是不胜惶恐，希望这个项目开发过程顺利，也希望我的朋友能通过这个项目得到不错的收获，发出不错的论文！
