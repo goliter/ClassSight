@@ -14,7 +14,7 @@ const StudentHomePage: React.FC = () => {
       <PageHeader />
       
       {/* 导航菜单 */}
-      <StudentNavigation />
+      <StudentNavigation role={0} />
       
       {/* 主要内容区域 */}
       <main className="container mx-auto px-4 py-8">

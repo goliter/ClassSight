@@ -5,6 +5,7 @@ interface CourseItem {
   name: string;
   teacher: string;
   time: string;
+  location: string;
   status: 'completed' | 'pending' | 'in-progress';
 }
 
@@ -16,19 +17,21 @@ const TodayCourses: React.FC<TodayCoursesProps> = ({ courses }) => {
   // 默认的今日课程数据
   const defaultCourses: CourseItem[] = [
     {
-      id: '1',
-      name: '高等数学',
-      teacher: '李老师',
-      time: '上午 8:00-10:00',
-      status: 'completed'
+      id: "1",
+      name: "高等数学",
+      teacher: "李老师",
+      time: "上午 8:00-10:00",
+      status: "completed",
+      location : "A301教室",
     },
     {
-      id: '2',
-      name: '大学物理',
-      teacher: '张老师',
-      time: '下午 14:00-16:00',
-      status: 'pending'
-    }
+      id: "2",
+      name: "大学物理",
+      teacher: "张老师",
+      time: "下午 14:00-16:00",
+      status: "pending",
+      location : "A301教室",
+    },
   ];
   
   const courseData = courses || defaultCourses;
@@ -66,12 +69,19 @@ const TodayCourses: React.FC<TodayCoursesProps> = ({ courses }) => {
         {courseData.map((course) => {
           const statusInfo = getStatusInfo(course.status);
           return (
-            <div key={course.id} className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+            <div
+              key={course.id}
+              className="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-800 rounded-lg"
+            >
               <div>
                 <p className="font-medium">{course.name}</p>
-                <p className="text-xs text-gray-500 dark:text-gray-400">{course.teacher} · {course.time}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  {course.teacher} · {course.time} · {course.location}
+                </p>
               </div>
-              <span className={`text-xs ${statusInfo.className} px-2 py-1 rounded-full`}>
+              <span
+                className={`text-xs ${statusInfo.className} px-2 py-1 rounded-full`}
+              >
                 {statusInfo.text}
               </span>
             </div>

@@ -1,5 +1,6 @@
 import React from 'react';
 import { BookOpen } from 'lucide-react';
+import Link from 'next/link';
 
 interface CourseCardProps {
   title: string;
@@ -8,6 +9,8 @@ interface CourseCardProps {
   type: string;
   schedule: string;
   bgColor: string;
+  id: string;
+  isStudentView?: boolean;
 }
 
 const CourseCard: React.FC<CourseCardProps> = ({
@@ -16,10 +19,13 @@ const CourseCard: React.FC<CourseCardProps> = ({
   department,
   type,
   schedule,
-  bgColor
+  bgColor,
+  id,
+  isStudentView = false
 }) => {
-  return (
-    <div className="bg-white dark:bg-[oklch(0.205_0_0)] rounded-xl shadow-md overflow-hidden">
+  // 为教师视图添加链接到课程详情页的功能
+  const cardContent = (
+    <div className="bg-white dark:bg-[oklch(0.205_0_0)] rounded-xl shadow-md overflow-hidden h-full">
       <div className={`h-40 ${bgColor} flex items-center justify-center`}>
         <BookOpen className="h-16 w-16 text-white opacity-75" />
       </div>
@@ -37,6 +43,18 @@ const CourseCard: React.FC<CourseCardProps> = ({
       </div>
     </div>
   );
+
+  // 教师视图下添加链接到课程详情页的功能
+  if (!isStudentView) {
+    return (
+      <Link href={`/home/teacher/courses/${id}`} className="block hover:shadow-lg transition-shadow duration-300">
+        {cardContent}
+      </Link>
+    );
+  }
+
+  // 学生视图直接返回卡片内容
+  return cardContent;
 };
 
 export default CourseCard;

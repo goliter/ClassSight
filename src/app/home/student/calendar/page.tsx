@@ -58,7 +58,7 @@ const CalendarPage: React.FC = () => {
       {/* 顶部导航 */}
       <PageHeader />
 
-      <StudentNavigation />
+      <StudentNavigation role={0}/>
 
       <main className="container mx-auto px-4 py-8">
         <h2 className="text-2xl font-bold mb-6">学习日历</h2>

@@ -44,7 +44,7 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({ params }) => {
       {/* 顶部导航 */}
       <PageHeader title="课程详情" />
 
-      <StudentNavigation />
+      <StudentNavigation role={0} />
 
       <main className="container mx-auto px-4 py-8">
         <div className="max-w-4xl mx-auto">

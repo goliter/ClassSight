@@ -3,9 +3,7 @@
 import React from "react";
 import {
   NavigationMenu,
-  NavigationMenuContent,
   NavigationMenuItem,
-  NavigationMenuLink,
   NavigationMenuList,
   NavigationMenuTrigger,
 } from "@radix-ui/react-navigation-menu";
@@ -14,36 +12,68 @@ import { usePathname } from "next/navigation";
 import { cn } from "../lib/utils";
 import { Calendar, Home, BookOpen, User } from "lucide-react";
 
-const StudentNavigation: React.FC = () => {
+const studentNavItems = [
+  {
+    href: "/home/student",
+    icon: <Home className="h-4 w-4" />,
+    label: "首页",
+  },
+  {
+    href: "/home/student/courses",
+    icon: <BookOpen className="h-4 w-4" />,
+    label: "课程",
+  },
+  {
+    href: "/home/student/calendar",
+    icon: <Calendar className="h-4 w-4" />,
+    label: "日历",
+  },
+  {
+    href: "/home/student/profile",
+    icon: <User className="h-4 w-4" />,
+    label: "我的",
+  },
+];
+
+const teacherNavItems = [
+  {
+    href: "/home/teacher",
+    icon: <Home className="h-4 w-4" />,
+    label: "首页",
+  },
+  {
+    href: "/home/teacher/courses",
+    icon: <BookOpen className="h-4 w-4" />,
+    label: "课程",
+  },
+  {
+    href: "/home/teacher/calendar",
+    icon: <Calendar className="h-4 w-4" />,
+    label: "日历",
+  },
+  {
+    href: "/home/teacher/profile",
+    icon: <User className="h-4 w-4" />,
+    label: "我的",
+  },
+];
+
+interface StudentNavigationProps {
+  role: 0 | 1 | 2;
+}
+
+const StudentNavigation: React.FC<StudentNavigationProps> = ({ role }) => {
   const pathname = usePathname();
 
-  // 定义导航项数据
-  const navItems = [
-    {
-      href: "/home/student",
-      icon: <Home className="h-4 w-4" />,
-      label: "首页",
-    },
-    {
-      href: "/home/student/courses",
-      icon: <BookOpen className="h-4 w-4" />,
-      label: "课程",
-    },
-    {
-      href: "/home/student/calendar",
-      icon: <Calendar className="h-4 w-4" />,
-      label: "日历",
-    },
-    {
-      href: "/home/student/profile",
-      icon: <User className="h-4 w-4" />,
-      label: "我的",
-    },
-  ];
-
+  const navItems =
+    role === 0 ? studentNavItems : role === 1 ? teacherNavItems : [];
   // 检查路径是否匹配（支持父路径匹配）
   const isActivePath = (href: string) => {
     if (href === "/home/student") {
+      return pathname === href;
+    }
+
+    if (href === "/home/teacher") {
       return pathname === href;
     }
 
