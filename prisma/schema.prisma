@@ -17,6 +17,7 @@ datasource db {
 model Student {
   studentId String @id @unique @db.VarChar(20)
   password  String @db.VarChar(100)
+  role      Int    @default(0)
 
   @@map("students")
 }
@@ -24,6 +25,7 @@ model Student {
 model Teacher {
   teacherId String @id @unique @db.VarChar(20)
   password  String @db.VarChar(100)
+  role      Int    @default(1)
 
   @@map("teachers")
 }
@@ -31,6 +33,7 @@ model Teacher {
 model Admin {
   adminId   String @id @unique @db.VarChar(20)
   password  String @db.VarChar(100)
+  role      Int    @default(2)
 
   @@map("admins")
 }
