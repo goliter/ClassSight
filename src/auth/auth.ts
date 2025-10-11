@@ -71,4 +71,20 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
       },
     }),
   ],
+  callbacks: {
+    async jwt({ token, user }) {
+      // 初次登录时 user 会存在，将 user.id 写入 token 中
+      if (user) {
+        token.id = user.id;
+      }
+      return token;
+    },
+    async session({ session, token }) {
+      // 将 token 中的 id 写入 session 中，这样前端就可以通过 session.user.id 获取到
+      if (session.user) {
+        session.user.id = token.id as string;
+      }
+      return session;
+    },
+  },
 });
