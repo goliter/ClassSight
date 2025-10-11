@@ -10,7 +10,7 @@ import {
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "../lib/utils";
-import { Calendar, Home, BookOpen, User } from "lucide-react";
+import { Calendar, Home, BookOpen, User, Building2 } from "lucide-react";
 
 const studentNavItems = [
   {
@@ -58,6 +58,39 @@ const teacherNavItems = [
   },
 ];
 
+const adminNavItems = [
+  {
+    href: "/home/admin",
+    icon: <Home className="h-4 w-4" />,
+    label: "首页",
+  },
+  {
+    href: "/home/admin/student",
+    icon: <User className="h-4 w-4" />,
+    label: "学生管理",
+  },
+  {
+    href: "/home/admin/teacher",
+    icon: <User className="h-4 w-4" />,
+    label: "老师管理",
+  },
+  {
+    href: "/home/admin/courses",
+    icon: <BookOpen className="h-4 w-4" />,
+    label: "课程管理",
+  },
+  {
+    href: "/home/admin/department",
+    icon: <Building2 className="h-4 w-4" />,
+    label: "学院管理",
+  },
+  {
+    href: "/home/admin/calendar",
+    icon: <Calendar className="h-4 w-4" />,
+    label: "日历",
+  },
+];
+
 interface StudentNavigationProps {
   role: 0 | 1 | 2;
 }
@@ -66,7 +99,7 @@ const StudentNavigation: React.FC<StudentNavigationProps> = ({ role }) => {
   const pathname = usePathname();
 
   const navItems =
-    role === 0 ? studentNavItems : role === 1 ? teacherNavItems : [];
+    role === 0 ? studentNavItems : role === 1 ? teacherNavItems : adminNavItems;
   // 检查路径是否匹配（支持父路径匹配）
   const isActivePath = (href: string) => {
     if (href === "/home/student") {
@@ -74,6 +107,10 @@ const StudentNavigation: React.FC<StudentNavigationProps> = ({ role }) => {
     }
 
     if (href === "/home/teacher") {
+      return pathname === href;
+    }
+
+    if (href === "/home/admin") {
       return pathname === href;
     }
 
