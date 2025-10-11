@@ -65,13 +65,13 @@ export default function Home() {
             {/* 按钮区域 */}
             <div className="flex flex-col sm:flex-row justify-center gap-6 mb-16">
               <Link
-                href="/register"
+                href="/auth/register"
                 className="px-10 py-5 bg-white text-indigo-700 font-bold text-xl rounded-2xl hover:bg-blue-50 transition-all duration-300 text-center shadow-2xl hover:shadow-3xl transform hover:-translate-y-2 w-full sm:w-auto"
               >
                 注册账户
               </Link>
               <Link
-                href="/login"
+                href="/auth/login"
                 className="px-10 py-5 bg-indigo-900/50 text-white font-bold text-xl rounded-2xl border-2 border-white/30 hover:border-white/60 transition-all duration-300 text-center shadow-2xl hover:shadow-3xl transform hover:-translate-y-2 w-full sm:w-auto backdrop-blur-sm"
               >
                 登录系统
