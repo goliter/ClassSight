@@ -13,6 +13,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from "sonner";
 import { Badge } from '@/components/ui/badge';
+import StudentAddDialog from '@/components/StudentAddDialog';
+import StudentEditDialog from '@/components/StudentEditDialog';
+import SearchBar from '@/components/SearchBar';
+import DataTable from '@/components/DataTable';
+import Pagination from '@/components/Pagination';
 
 // 学生接口定义
 interface Student {
@@ -308,612 +313,81 @@ const StudentManagementPage: React.FC = () => {
           </p>
         </div>
 
-        {/* 搜索和添加按钮区域 */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="搜索学生姓名或学号..."
-              value={searchTerm}
-              onChange={handleSearch}
-              className="pl-10"
-            />
-          </div>
-          <Button
-            onClick={() => setIsAddDialogOpen(true)}
-            className="w-full sm:w-auto"
-          >
-            <Plus className="mr-2 h-4 w-4" />
-            添加学生
-          </Button>
-        </div>
+        {/* 使用搜索栏组件 */}
+        <SearchBar
+          searchTerm={searchTerm}
+          onSearch={handleSearch}
+          placeholder="搜索学生姓名或学号..."
+          onAddClick={() => setIsAddDialogOpen(true)}
+          addButtonText="添加学生"
+        />
 
-        {/* 学生列表 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>学生列表</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="py-3 text-left font-semibold">姓名</th>
-                    <th className="py-3 text-left font-semibold">学号</th>
-                    <th className="py-3 text-left font-semibold">所属学院</th>
-                    <th className="py-3 text-left font-semibold">专业</th>
-                    <th className="py-3 text-left font-semibold">年级班级</th>
-                    <th className="py-3 text-left font-semibold">邮箱</th>
-                    <th className="py-3 text-left font-semibold">电话</th>
-                    <th className="py-3 text-left font-semibold">状态</th>
-                    <th className="py-3 text-left font-semibold">操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedStudents.length > 0 ? (
-                    paginatedStudents.map((student) => (
-                      <tr
-                        key={student.id}
-                        className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50"
-                      >
-                        <td className="py-4 font-medium">{student.name}</td>
-                        <td className="py-4">{student.studentId}</td>
-                        <td className="py-4">{student.departmentName}</td>
-                        <td className="py-4">{student.major}</td>
-                        <td className="py-4">
-                          {student.grade}级{student.class}
-                        </td>
-                        <td className="py-4">
-                          <a
-                            href={`mailto:${student.email}`}
-                            className="text-blue-600 dark:text-blue-400 hover:underline"
-                          >
-                            {student.email}
-                          </a>
-                        </td>
-                        <td className="py-4">{student.phone}</td>
-                        <td className="py-4">
-                          {getStatusBadge(student.status)}
-                        </td>
-                        <td className="py-4">
-                          <div className="flex space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openEditDialog(student)}
-                              className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <AlertDialog
-                              open={
-                                isDeleteDialogOpen &&
-                                selectedStudent?.id === student.id
-                              }
-                              onOpenChange={setIsDeleteDialogOpen}
-                            >
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>确认删除</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    您确定要删除学生「{student.name}
-                                    」的信息吗？此操作无法撤销。
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>取消</AlertDialogCancel>
-                                  <AlertDialogAction
-                                    onClick={handleDeleteStudent}
-                                    className="bg-red-600 hover:bg-red-700"
-                                  >
-                                    删除
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td
-                        colSpan={9}
-                        className="py-10 text-center text-gray-500 dark:text-gray-400"
-                      >
-                        没有找到符合条件的学生
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+        {/* 使用数据表格组件 */}
+        <DataTable
+          title="学生列表"
+          data={paginatedStudents}
+          columns={[
+            { header: '姓名', accessor: 'name', className: 'font-medium' },
+            { header: '学号', accessor: 'studentId' },
+            { header: '所属学院', accessor: 'departmentName' },
+            { header: '专业', accessor: 'major' },
+            { 
+              header: '年级班级', 
+              accessor: (student) => `${student.grade}级${student.class}`
+            },
+            { 
+              header: '邮箱', 
+              accessor: (student) => (
+                <a
+                  href={`mailto:${student.email}`}
+                  className="text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  {student.email}
+                </a>
+              )
+            },
+            { header: '电话', accessor: 'phone' },
+            { header: '状态', accessor: 'status' }
+          ]}
+          onEdit={openEditDialog}
+          onDelete={handleDeleteStudent}
+          deleteDialogOpen={isDeleteDialogOpen}
+          setDeleteDialogOpen={setIsDeleteDialogOpen}
+          selectedItem={selectedStudent}
+          setSelectedItem={setSelectedStudent}
+          emptyStateText="没有找到符合条件的学生"
+          getStatusBadge={getStatusBadge}
+        />
 
-        {/* 分页控件 */}
-        {totalPages > 1 && (
-          <div className="flex justify-between items-center mt-6">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              显示{" "}
-              {paginatedStudents.length > 0
-                ? (currentPage - 1) * itemsPerPage + 1
-                : 0}{" "}
-              -{Math.min(currentPage * itemsPerPage, filteredStudents.length)}
-              ，共 {filteredStudents.length} 条记录
-            </div>
-            <div className="flex space-x-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                上一页
-              </Button>
-              <span className="flex items-center justify-center px-3 py-1 border border-gray-200 dark:border-gray-700 rounded-md">
-                {currentPage}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                下一页
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-          </div>
-        )}
+        {/* 使用分页控件组件 */}
+        <Pagination
+          currentPage={currentPage}
+          totalPages={totalPages}
+          totalItems={filteredStudents.length}
+          itemsPerPage={itemsPerPage}
+          onPageChange={goToPage}
+        />
       </main>
 
-      {/* 添加学生对话框 */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>添加学生</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="studentName" className="text-right font-medium">
-                姓名
-              </label>
-              <Input
-                id="studentName"
-                placeholder="请输入学生姓名"
-                value={newStudent.name || ""}
-                onChange={(e) =>
-                  setNewStudent({ ...newStudent, name: e.target.value })
-                }
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="studentId" className="text-right font-medium">
-                学号
-              </label>
-              <Input
-                id="studentId"
-                placeholder="请输入学号"
-                value={newStudent.studentId || ""}
-                onChange={(e) =>
-                  setNewStudent({ ...newStudent, studentId: e.target.value })
-                }
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label
-                htmlFor="studentDepartment"
-                className="text-right font-medium"
-              >
-                所属学院
-              </label>
-              <Select
-                value={newStudent.departmentId || ""}
-                onValueChange={(value) =>
-                  setNewStudent({ ...newStudent, departmentId: value })
-                }
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="选择学院" />
-                </SelectTrigger>
-                <SelectContent>
-                  {departments.map((department) => (
-                    <SelectItem key={department.id} value={department.id}>
-                      {department.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="studentMajor" className="text-right font-medium">
-                专业
-              </label>
-              <Input
-                id="studentMajor"
-                placeholder="请输入专业"
-                value={newStudent.major || ""}
-                onChange={(e) =>
-                  setNewStudent({ ...newStudent, major: e.target.value })
-                }
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="studentGrade" className="text-right font-medium">
-                年级
-              </label>
-              <Select
-                value={newStudent.grade || "2023"}
-                onValueChange={(value) =>
-                  setNewStudent({ ...newStudent, grade: value })
-                }
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="选择年级" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="2020">2020级</SelectItem>
-                  <SelectItem value="2021">2021级</SelectItem>
-                  <SelectItem value="2022">2022级</SelectItem>
-                  <SelectItem value="2023">2023级</SelectItem>
-                  <SelectItem value="2024">2024级</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="studentClass" className="text-right font-medium">
-                班级
-              </label>
-              <Input
-                id="studentClass"
-                placeholder="请输入班级"
-                value={newStudent.class || ""}
-                onChange={(e) =>
-                  setNewStudent({ ...newStudent, class: e.target.value })
-                }
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="studentEmail" className="text-right font-medium">
-                邮箱
-              </label>
-              <Input
-                id="studentEmail"
-                type="email"
-                placeholder="请输入邮箱"
-                value={newStudent.email || ""}
-                onChange={(e) =>
-                  setNewStudent({ ...newStudent, email: e.target.value })
-                }
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="studentPhone" className="text-right font-medium">
-                电话
-              </label>
-              <Input
-                id="studentPhone"
-                placeholder="请输入电话"
-                value={newStudent.phone || ""}
-                onChange={(e) =>
-                  setNewStudent({ ...newStudent, phone: e.target.value })
-                }
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label
-                htmlFor="studentEnrollmentDate"
-                className="text-right font-medium"
-              >
-                入学日期
-              </label>
-              <Input
-                id="studentEnrollmentDate"
-                type="date"
-                value={
-                  newStudent.enrollmentDate ||
-                  new Date().toISOString().split("T")[0]
-                }
-                onChange={(e) =>
-                  setNewStudent({
-                    ...newStudent,
-                    enrollmentDate: e.target.value,
-                  })
-                }
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="studentStatus" className="text-right font-medium">
-                状态
-              </label>
-              <Select
-                value={(newStudent.status as string) || "active"}
-                onValueChange={(value) =>
-                  setNewStudent({
-                    ...newStudent,
-                    status: value as "active" | "suspended" | "graduated",
-                  })
-                }
-              >
-                <SelectTrigger className="col-span-3">
-                  <SelectValue placeholder="选择状态" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="active">在读</SelectItem>
-                  <SelectItem value="suspended">休学</SelectItem>
-                  <SelectItem value="graduated">毕业</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsAddDialogOpen(false)}>
-              取消
-            </Button>
-            <Button onClick={handleAddStudent}>添加</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      {/* 对话框部分保持不变 */}
+      <StudentAddDialog
+        open={isAddDialogOpen}
+        onOpenChange={setIsAddDialogOpen}
+        newStudent={newStudent}
+        setNewStudent={setNewStudent}
+        departments={departments}
+        onAddStudent={handleAddStudent}
+      />
 
-      {/* 编辑学生对话框 */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>编辑学生</DialogTitle>
-          </DialogHeader>
-          {selectedStudent && (
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label
-                  htmlFor="editStudentName"
-                  className="text-right font-medium"
-                >
-                  姓名
-                </label>
-                <Input
-                  id="editStudentName"
-                  placeholder="请输入学生姓名"
-                  value={editingStudent.name || ""}
-                  onChange={(e) =>
-                    setEditingStudent({
-                      ...editingStudent,
-                      name: e.target.value,
-                    })
-                  }
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label
-                  htmlFor="editStudentId"
-                  className="text-right font-medium"
-                >
-                  学号
-                </label>
-                <Input
-                  id="editStudentId"
-                  placeholder="请输入学号"
-                  value={editingStudent.studentId || ""}
-                  onChange={(e) =>
-                    setEditingStudent({
-                      ...editingStudent,
-                      studentId: e.target.value,
-                    })
-                  }
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label
-                  htmlFor="editStudentDepartment"
-                  className="text-right font-medium"
-                >
-                  所属学院
-                </label>
-                <Select
-                  value={editingStudent.departmentId || ""}
-                  onValueChange={(value) =>
-                    setEditingStudent({
-                      ...editingStudent,
-                      departmentId: value,
-                    })
-                  }
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="选择学院" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {departments.map((department) => (
-                      <SelectItem key={department.id} value={department.id}>
-                        {department.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label
-                  htmlFor="editStudentMajor"
-                  className="text-right font-medium"
-                >
-                  专业
-                </label>
-                <Input
-                  id="editStudentMajor"
-                  placeholder="请输入专业"
-                  value={editingStudent.major || ""}
-                  onChange={(e) =>
-                    setEditingStudent({
-                      ...editingStudent,
-                      major: e.target.value,
-                    })
-                  }
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label
-                  htmlFor="editStudentGrade"
-                  className="text-right font-medium"
-                >
-                  年级
-                </label>
-                <Select
-                  value={editingStudent.grade || "2023"}
-                  onValueChange={(value) =>
-                    setEditingStudent({ ...editingStudent, grade: value })
-                  }
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="选择年级" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="2020">2020级</SelectItem>
-                    <SelectItem value="2021">2021级</SelectItem>
-                    <SelectItem value="2022">2022级</SelectItem>
-                    <SelectItem value="2023">2023级</SelectItem>
-                    <SelectItem value="2024">2024级</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label
-                  htmlFor="editStudentClass"
-                  className="text-right font-medium"
-                >
-                  班级
-                </label>
-                <Input
-                  id="editStudentClass"
-                  placeholder="请输入班级"
-                  value={editingStudent.class || ""}
-                  onChange={(e) =>
-                    setEditingStudent({
-                      ...editingStudent,
-                      class: e.target.value,
-                    })
-                  }
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label
-                  htmlFor="editStudentEmail"
-                  className="text-right font-medium"
-                >
-                  邮箱
-                </label>
-                <Input
-                  id="editStudentEmail"
-                  type="email"
-                  placeholder="请输入邮箱"
-                  value={editingStudent.email || ""}
-                  onChange={(e) =>
-                    setEditingStudent({
-                      ...editingStudent,
-                      email: e.target.value,
-                    })
-                  }
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label
-                  htmlFor="editStudentPhone"
-                  className="text-right font-medium"
-                >
-                  电话
-                </label>
-                <Input
-                  id="editStudentPhone"
-                  placeholder="请输入电话"
-                  value={editingStudent.phone || ""}
-                  onChange={(e) =>
-                    setEditingStudent({
-                      ...editingStudent,
-                      phone: e.target.value,
-                    })
-                  }
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label
-                  htmlFor="editStudentEnrollmentDate"
-                  className="text-right font-medium"
-                >
-                  入学日期
-                </label>
-                <Input
-                  id="editStudentEnrollmentDate"
-                  type="date"
-                  value={
-                    editingStudent.enrollmentDate ||
-                    new Date().toISOString().split("T")[0]
-                  }
-                  onChange={(e) =>
-                    setEditingStudent({
-                      ...editingStudent,
-                      enrollmentDate: e.target.value,
-                    })
-                  }
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label
-                  htmlFor="editStudentStatus"
-                  className="text-right font-medium"
-                >
-                  状态
-                </label>
-                <Select
-                  value={(editingStudent.status as string) || "active"}
-                  onValueChange={(value) =>
-                    setEditingStudent({
-                      ...editingStudent,
-                      status: value as "active" | "suspended" | "graduated",
-                    })
-                  }
-                >
-                  <SelectTrigger className="col-span-3">
-                    <SelectValue placeholder="选择状态" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="active">在读</SelectItem>
-                    <SelectItem value="suspended">休学</SelectItem>
-                    <SelectItem value="graduated">毕业</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsEditDialogOpen(false)}>
-              取消
-            </Button>
-            <Button onClick={handleEditStudent}>保存</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <StudentEditDialog
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
+        editingStudent={editingStudent}
+        setEditingStudent={setEditingStudent}
+        departments={departments}
+        onEditStudent={handleEditStudent}
+        selectedStudent={selectedStudent}
+      />
 
       {/* 页脚 */}
       <PageFooter />

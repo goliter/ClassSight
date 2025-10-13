@@ -4,15 +4,17 @@ import React, { useState } from 'react';
 import PageHeader from '@/components/PageHeader';
 import PageFooter from '@/components/PageFooter';
 import StudentNavigation from '@/components/StudentNavigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight, X } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Textarea } from "@/components/ui/textarea";
+import { Button } from '@/components/ui/button';
 import { toast } from "sonner";
-import { Badge } from '@/components/ui/badge';
+import SearchBar from '@/components/SearchBar';
+import Pagination from '@/components/Pagination';
+import DepartmentList from '@/components/DepartmentList';
+import { X } from 'lucide-react';
+import AdminBadge from '@/components/AdminBadge';
 
 // 学院接口定义
 interface Department {
@@ -34,42 +36,17 @@ interface Admin {
   role: string;
 }
 
+// 导入新组件
+import DepartmentAddDialog from '@/components/DepartmentAddDialog';
+import DepartmentEditDialog from '@/components/DepartmentEditDialog';
+
+// 在组件中使用
 const DepartmentManagementPage: React.FC = () => {
-  // 模拟数据 - 更新为支持多个管理员
+  // 模拟数据 - 支持多个管理员
   const [departments, setDepartments] = useState<Department[]>([
-    {
-      id: '1',
-      name: '信息科学与技术学院',
-      code: 'IST',
-      description: '专注于计算机科学、软件工程和信息安全等领域的教学与研究',
-      adminIds: ['AD10001', 'AD10002'],
-      adminNames: ['张教授', '李教授'],
-      studentCount: 1200,
-      teacherCount: 85,
-      courseCount: 120
-    },
-    {
-      id: '2',
-      name: '人工智能学院',
-      code: 'AI',
-      description: '培养人工智能领域的专业人才，研究机器学习、深度学习等前沿技术',
-      adminIds: ['AD10003'],
-      adminNames: ['王教授'],
-      studentCount: 850,
-      teacherCount: 62,
-      courseCount: 95
-    },
-    {
-      id: '3',
-      name: '数学与统计学院',
-      code: 'MAS',
-      description: '提供数学、应用数学和统计学等专业的教育与研究',
-      adminIds: [], // 支持没有管理员
-      adminNames: [],
-      studentCount: 680,
-      teacherCount: 45,
-      courseCount: 80
-    },
+    { id: '1', name: '信息科学与技术学院', code: 'IST', description: '专注于计算机科学、软件工程和信息安全等领域的教学与研究', adminIds: ['AD10001', 'AD10002'], adminNames: ['张教授', '李教授'], studentCount: 1200, teacherCount: 85, courseCount: 120 },
+    { id: '2', name: '人工智能学院', code: 'AI', description: '培养人工智能领域的专业人才，研究机器学习、深度学习等前沿技术', adminIds: ['AD10003'], adminNames: ['王教授'], studentCount: 850, teacherCount: 62, courseCount: 95 },
+    { id: '3', name: '数学与统计学院', code: 'MAS', description: '提供数学、应用数学和统计学等专业的教育与研究', adminIds: [], adminNames: [], studentCount: 680, teacherCount: 45, courseCount: 80 },
   ]);
 
   // 模拟管理员数据
@@ -80,20 +57,14 @@ const DepartmentManagementPage: React.FC = () => {
     { id: 'AD10004', name: '赵教授', role: '学院管理员' },
   ]);
 
-  // 状态管理 - 更新为支持多个管理员
+  // 状态管理 - 支持多个管理员
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
-  const [newDepartment, setNewDepartment] = useState<Partial<Department>>({
-    name: '',
-    code: '',
-    description: '',
-    adminIds: [],
-    adminNames: []
-  });
+  const [newDepartment, setNewDepartment] = useState<Partial<Department>>({ name: '', code: '', description: '', adminIds: [], adminNames: [] });
   const [editingDepartment, setEditingDepartment] = useState<Partial<Department>>({});
   const itemsPerPage = 10;
 
@@ -179,7 +150,7 @@ const DepartmentManagementPage: React.FC = () => {
     });
   };
 
-  // 处理添加学院 - 不再要求必须有管理员
+  // 处理添加学院 - 不要求必须有管理员
   const handleAddDepartment = () => {
     if (!newDepartment.name || !newDepartment.code) {
       toast.error('请填写学院名称和代码');
@@ -204,7 +175,7 @@ const DepartmentManagementPage: React.FC = () => {
     toast.success('学院创建成功');
   };
 
-  // 处理编辑学院 - 更新为支持多个管理员
+  // 处理编辑学院 - 支持多个管理员
   const handleEditDepartment = () => {
     if (!selectedDepartment || !editingDepartment.name || !editingDepartment.code) {
       toast.error('请填写学院名称和代码');
@@ -213,14 +184,7 @@ const DepartmentManagementPage: React.FC = () => {
 
     setDepartments(departments.map(dept => 
       dept.id === selectedDepartment.id
-        ? {
-            ...dept,
-            name: editingDepartment.name || dept.name,
-            code: editingDepartment.code || dept.code,
-            description: editingDepartment.description || dept.description,
-            adminIds: editingDepartment.adminIds || dept.adminIds,
-            adminNames: editingDepartment.adminNames || dept.adminNames
-          }
+        ? { ...dept, name: editingDepartment.name || dept.name, code: editingDepartment.code || dept.code, description: editingDepartment.description || dept.description, adminIds: editingDepartment.adminIds || dept.adminIds, adminNames: editingDepartment.adminNames || dept.adminNames }
         : dept
     ));
 
@@ -240,16 +204,10 @@ const DepartmentManagementPage: React.FC = () => {
     toast.success('学院已删除');
   };
 
-  // 打开编辑对话框 - 更新为支持多个管理员
+  // 打开编辑对话框 - 支持多个管理员
   const openEditDialog = (department: Department) => {
     setSelectedDepartment(department);
-    setEditingDepartment({
-      name: department.name,
-      code: department.code,
-      description: department.description,
-      adminIds: [...department.adminIds],
-      adminNames: [...department.adminNames]
-    });
+    setEditingDepartment({ name: department.name, code: department.code, description: department.description, adminIds: [...department.adminIds], adminNames: [...department.adminNames] });
     setIsEditDialogOpen(true);
   };
 
@@ -278,337 +236,66 @@ const DepartmentManagementPage: React.FC = () => {
       <main className="container mx-auto px-4 py-8">
         <div className="bg-white dark:bg-[oklch(0.205_0_0)] rounded-xl shadow-md p-6 mb-6">
           <h1 className="text-2xl font-bold mb-2">学院管理</h1>
-          <p className="text-gray-500 dark:text-gray-400 mb-6">管理学院信息、学院管理员及相关数据</p>
+          <p className="text-gray-500 dark:text-gray-400 mb-6">
+            管理所有学院信息、教师和学生数据
+          </p>
         </div>
 
-        {/* 搜索和添加按钮区域 */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
-          <div className="relative w-full sm:w-64">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
-            <Input
-              placeholder="搜索学院名称或代码..."
-              value={searchTerm}
-              onChange={handleSearch}
-              className="pl-10"
-            />
-          </div>
-          <Button onClick={() => setIsAddDialogOpen(true)} className="w-full sm:w-auto">
-            <Plus className="mr-2 h-4 w-4" />
-            添加学院
-          </Button>
-        </div>
+        {/* 使用提取的搜索栏组件 */}
+        <SearchBar
+          searchTerm={searchTerm}
+          onSearch={handleSearch}
+          placeholder="搜索学院名称或代码..."
+          onAddClick={() => setIsAddDialogOpen(true)}
+          addButtonText="添加学院"
+        />
 
-        {/* 学院列表 */}
-        <Card>
-          <CardHeader>
-            <CardTitle>学院列表</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b border-gray-200 dark:border-gray-700">
-                    <th className="py-3 text-left font-semibold">学院名称</th>
-                    <th className="py-3 text-left font-semibold">学院代码</th>
-                    <th className="py-3 text-left font-semibold">学院管理员</th>
-                    <th className="py-3 text-left font-semibold">学生人数</th>
-                    <th className="py-3 text-left font-semibold">教师人数</th>
-                    <th className="py-3 text-left font-semibold">课程数量</th>
-                    <th className="py-3 text-left font-semibold">操作</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedDepartments.length > 0 ? (
-                    paginatedDepartments.map((department) => (
-                      <tr key={department.id} className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50">
-                        <td className="py-4">
-                          <div className="font-medium">{department.name}</div>
-                          <div className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">{department.description}</div>
-                        </td>
-                        <td className="py-4">{department.code}</td>
-                        <td className="py-4">
-                          {department.adminNames.length > 0 ? (
-                            <div className="flex flex-wrap gap-2">
-                              {department.adminNames.map((adminName, index) => (
-                                <Badge key={index} variant="secondary" className="bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200">
-                                  {adminName}
-                                </Badge>
-                              ))}
-                            </div>
-                          ) : (
-                            <span className="text-gray-400 text-sm">暂无管理员</span>
-                          )}
-                        </td>
-                        <td className="py-4">
-                          <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
-                            {department.studentCount}
-                          </Badge>
-                        </td>
-                        <td className="py-4">
-                          <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400">
-                            {department.teacherCount}
-                          </Badge>
-                        </td>
-                        <td className="py-4">
-                          <Badge variant="outline" className="bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400">
-                            {department.courseCount}
-                          </Badge>
-                        </td>
-                        <td className="py-4">
-                          <div className="flex space-x-2">
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              onClick={() => openEditDialog(department)}
-                              className="text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20"
-                            >
-                              <Edit className="h-4 w-4" />
-                            </Button>
-                            <AlertDialog open={isDeleteDialogOpen && selectedDepartment?.id === department.id} onOpenChange={setIsDeleteDialogOpen}>
-                              <AlertDialogTrigger asChild>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                                >
-                                  <Trash2 className="h-4 w-4" />
-                                </Button>
-                              </AlertDialogTrigger>
-                              <AlertDialogContent>
-                                <AlertDialogHeader>
-                                  <AlertDialogTitle>确认删除</AlertDialogTitle>
-                                  <AlertDialogDescription>
-                                    您确定要删除学院「{department.name}」吗？此操作无法撤销。
-                                  </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                  <AlertDialogCancel>取消</AlertDialogCancel>
-                                  <AlertDialogAction onClick={handleDeleteDepartment} className="bg-red-600 hover:bg-red-700">
-                                    删除
-                                  </AlertDialogAction>
-                                </AlertDialogFooter>
-                              </AlertDialogContent>
-                            </AlertDialog>
-                          </div>
-                        </td>
-                      </tr>
-                    ))
-                  ) : (
-                    <tr>
-                      <td colSpan={7} className="py-10 text-center text-gray-500 dark:text-gray-400">
-                        没有找到符合条件的学院
-                      </td>
-                    </tr>
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+        {/* 使用提取的学院列表组件 */}
+        <DepartmentList
+          departments={paginatedDepartments}
+          selectedDepartment={selectedDepartment}
+          isDeleteDialogOpen={isDeleteDialogOpen}
+          onOpenEditDialog={openEditDialog}
+          onOpenDeleteDialog={openDeleteDialog}
+          onDeleteDepartment={handleDeleteDepartment}
+          onSetDeleteDialogOpen={setIsDeleteDialogOpen}
+        />
 
-        {/* 分页控件 */}
+        {/* 使用提取的分页组件 */}
         {totalPages > 1 && (
-          <div className="flex justify-between items-center mt-6">
-            <div className="text-sm text-gray-500 dark:text-gray-400">
-              显示 {paginatedDepartments.length > 0 ? (currentPage - 1) * itemsPerPage + 1 : 0} -
-              {Math.min(currentPage * itemsPerPage, filteredDepartments.length)}，共 {filteredDepartments.length} 条记录
-            </div>
-            <div className="flex space-x-2">
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => goToPage(currentPage - 1)}
-                disabled={currentPage === 1}
-              >
-                <ChevronLeft className="h-4 w-4 mr-1" />
-                上一页
-              </Button>
-              <span className="flex items-center justify-center px-3 py-1 border border-gray-200 dark:border-gray-700 rounded-md">
-                {currentPage}
-              </span>
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => goToPage(currentPage + 1)}
-                disabled={currentPage === totalPages}
-              >
-                下一页
-                <ChevronRight className="h-4 w-4 ml-1" />
-              </Button>
-            </div>
-          </div>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            totalItems={filteredDepartments.length}
+            itemsPerPage={itemsPerPage}
+            onPageChange={goToPage}
+          />
         )}
+
+        {/* 添加学院对话框 */}
+        <DepartmentAddDialog
+          open={isAddDialogOpen}
+          onOpenChange={setIsAddDialogOpen}
+          newDepartment={newDepartment}
+          setNewDepartment={setNewDepartment}
+          admins={admins}
+          onAddAdmin={handleAddAdmin}
+          onRemoveAdmin={handleRemoveAdmin}
+          onAddDepartment={handleAddDepartment}
+        />
+
+        {/* 编辑学院对话框 */}
+        <DepartmentEditDialog
+          open={isEditDialogOpen}
+          onOpenChange={setIsEditDialogOpen}
+          editingDepartment={editingDepartment}
+          setEditingDepartment={setEditingDepartment}
+          admins={admins}
+          onAddAdmin={handleEditAddAdmin}
+          onRemoveAdmin={handleEditRemoveAdmin}
+          onEditDepartment={handleEditDepartment}
+        />
       </main>
-
-      {/* 添加学院对话框 */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>添加学院</DialogTitle>
-          </DialogHeader>
-          <div className="grid gap-4 py-4">
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="departmentName" className="text-right font-medium">学院名称</label>
-              <Input
-                id="departmentName"
-                placeholder="请输入学院名称"
-                value={newDepartment.name || ''}
-                onChange={(e) => setNewDepartment({ ...newDepartment, name: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="departmentCode" className="text-right font-medium">学院代码</label>
-              <Input
-                id="departmentCode"
-                placeholder="请输入学院代码"
-                value={newDepartment.code || ''}
-                onChange={(e) => setNewDepartment({ ...newDepartment, code: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="departmentDescription" className="text-right font-medium">学院描述</label>
-              <Input
-                id="departmentDescription"
-                placeholder="请输入学院描述"
-                value={newDepartment.description || ''}
-                onChange={(e) => setNewDepartment({ ...newDepartment, description: e.target.value })}
-                className="col-span-3"
-              />
-            </div>
-            <div className="grid grid-cols-4 items-center gap-4">
-              <label htmlFor="departmentAdmins" className="text-right font-medium">学院管理员</label>
-              <div className="col-span-3 space-y-2">
-                <Select
-                  onValueChange={handleAddAdmin}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="添加学院管理员" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {admins.filter(admin => !newDepartment.adminIds?.includes(admin.id)).map((admin) => (
-                      <SelectItem key={admin.id} value={admin.id}>
-                        {admin.name} ({admin.role})
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                
-                {/* 已选择的管理员列表 */}
-                {newDepartment.adminNames && newDepartment.adminNames.length > 0 && (
-                  <div className="flex flex-wrap gap-2 mt-2">
-                    {newDepartment.adminNames.map((adminName, index) => {
-                      const adminId = newDepartment.adminIds ? newDepartment.adminIds[index] : '';
-                      return (
-                        <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                          {adminName}
-                          <button
-                            onClick={() => handleRemoveAdmin(adminId)}
-                            className="ml-1 p-0.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
-                          >
-                            <X className="h-3 w-3" />
-                          </button>
-                        </Badge>
-                      );
-                    })}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsAddDialogOpen(false)}>取消</Button>
-            <Button onClick={handleAddDepartment}>添加</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* 编辑学院对话框 */}
-      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-        <DialogContent className="sm:max-w-[500px]">
-          <DialogHeader>
-            <DialogTitle>编辑学院</DialogTitle>
-          </DialogHeader>
-          {selectedDepartment && (
-            <div className="grid gap-4 py-4">
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label htmlFor="editDepartmentName" className="text-right font-medium">学院名称</label>
-                <Input
-                  id="editDepartmentName"
-                  placeholder="请输入学院名称"
-                  value={editingDepartment.name || ''}
-                  onChange={(e) => setEditingDepartment({ ...editingDepartment, name: e.target.value })}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label htmlFor="editDepartmentCode" className="text-right font-medium">学院代码</label>
-                <Input
-                  id="editDepartmentCode"
-                  placeholder="请输入学院代码"
-                  value={editingDepartment.code || ''}
-                  onChange={(e) => setEditingDepartment({ ...editingDepartment, code: e.target.value })}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label htmlFor="editDepartmentDescription" className="text-right font-medium">学院描述</label>
-                <Input
-                  id="editDepartmentDescription"
-                  placeholder="请输入学院描述"
-                  value={editingDepartment.description || ''}
-                  onChange={(e) => setEditingDepartment({ ...editingDepartment, description: e.target.value })}
-                  className="col-span-3"
-                />
-              </div>
-              <div className="grid grid-cols-4 items-center gap-4">
-                <label htmlFor="editDepartmentAdmins" className="text-right font-medium">学院管理员</label>
-                <div className="col-span-3 space-y-2">
-                  <Select
-                    onValueChange={handleEditAddAdmin}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="添加学院管理员" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {admins.filter(admin => !editingDepartment.adminIds?.includes(admin.id)).map((admin) => (
-                        <SelectItem key={admin.id} value={admin.id}>
-                          {admin.name} ({admin.role})
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  
-                  {/* 已选择的管理员列表 */}
-                  {editingDepartment.adminNames && editingDepartment.adminNames.length > 0 && (
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      {editingDepartment.adminNames.map((adminName, index) => {
-                        const adminId = editingDepartment.adminIds ? editingDepartment.adminIds[index] : '';
-                        return (
-                          <Badge key={index} variant="secondary" className="flex items-center gap-1">
-                            {adminName}
-                            <button
-                              onClick={() => handleEditRemoveAdmin(adminId)}
-                              className="ml-1 p-0.5 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700"
-                            >
-                              <X className="h-3 w-3" />
-                            </button>
-                          </Badge>
-                        );
-                      })}
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setIsEditDialogOpen(false)}>取消</Button>
-            <Button onClick={handleEditDepartment}>保存</Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
 
       {/* 页脚 */}
       <PageFooter />
