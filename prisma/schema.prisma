@@ -1,9 +1,6 @@
 // This is your Prisma schema file,
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
-// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
-// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
-
 generator client {
   provider = "prisma-client-js"
   output   = "../generated/prisma"
@@ -14,26 +11,127 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
+// 学院模型
+model Department {
+  id          String   @id @unique @db.VarChar(20)
+  name        String   @db.VarChar(100)
+  code        String   @unique @db.VarChar(20)
+  description String?  @db.Text
+  students    Student[]
+  teachers    Teacher[]
+  courses     Course[]
+  majors      Major[]
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("departments")
+}
+
+// 专业模型
+model Major {
+  id           String   @id @unique @db.VarChar(20)
+  name         String   @db.VarChar(100)
+  code         String   @unique @db.VarChar(20)
+  description  String?  @db.Text
+  departmentId String   @default("")
+  department   Department? @relation(fields: [departmentId], references: [id])
+  students     Student[] // 新增：一个专业有多个学生
+  teachers     Teacher[] // 新增：一个专业有多个教师
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@map("majors")
+}
+
+// 学生模型
 model Student {
-  studentId String @id @unique @db.VarChar(20)
-  password  String @db.VarChar(100)
-  role      Int    @default(0)
+  studentId      String        @id @unique @db.VarChar(20)
+  password       String        @db.VarChar(100)
+  role           Int           @default(0)
+  name           String        @db.VarChar(50) @default("")
+  departmentId   String        @default("")
+  department     Department?   @relation(fields: [departmentId], references: [id])
+  majorId        String        @default("")
+  major          Major?        @relation(fields: [majorId], references: [id])
+  grade          String        @db.VarChar(20) @default("")
+  class          String        @db.VarChar(50) @default("")
+  email          String        @unique @db.VarChar(100) @default("student@example.com")
+  phone          String?       @db.VarChar(20)
+  enrollmentDate DateTime      @default(now())
+  status         String        @db.VarChar(20) @default("active") // active, suspended, graduated
+  courseEnrollments CourseEnrollment[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   @@map("students")
 }
 
+// 教师模型
 model Teacher {
-  teacherId String @id @unique @db.VarChar(20)
-  password  String @db.VarChar(100)
-  role      Int    @default(1)
+  teacherId      String        @id @unique @db.VarChar(20)
+  password       String        @db.VarChar(100)
+  role           Int           @default(1)
+  name           String        @db.VarChar(50) @default("")
+  departmentId   String        @default("")
+  department     Department?   @relation(fields: [departmentId], references: [id])
+  majorIds       String[]      @default([]) // 新增：教师所属的多个专业ID数组
+  majors         Major[]       // 新增：教师所属的多个专业
+  rank           String        @db.VarChar(50) @default("") // 教授, 副教授, 讲师等
+  email          String        @unique @db.VarChar(100) @default("teacher@example.com")
+  phone          String?       @db.VarChar(20)
+  office         String?       @db.VarChar(100)
+  hireDate       DateTime      @default(now())
+  status         String        @db.VarChar(20) @default("active") // active, onLeave, resigned
+  courses        Course[]
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
 
   @@map("teachers")
 }
 
+// 管理员模型
 model Admin {
-  adminId   String @id @unique @db.VarChar(20)
-  password  String @db.VarChar(100)
-  role      Int    @default(2)
+  adminId   String   @id @unique @db.VarChar(20)
+  password  String   @db.VarChar(100)
+  role      Int      @default(2)
+  name      String   @db.VarChar(50) @default("Admin")
+  email     String   @unique @db.VarChar(100) @default("admin@example.com")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt @default(now())
 
   @@map("admins")
+}
+
+// 课程模型
+model Course {
+  id          String            @id @unique @db.VarChar(20)
+  name        String            @db.VarChar(100) @default("")
+  code        String            @unique @db.VarChar(20) @default("")
+  teacherId   String            @default("")
+  teacher     Teacher?          @relation(fields: [teacherId], references: [teacherId])
+  departmentId String           @default("")
+  department  Department?       @relation(fields: [departmentId], references: [id])
+  credits     Int               @default(0)
+  description String?           @db.Text
+  status      String            @db.VarChar(20) @default("active") // active, inactive, pending
+  schedule    Json?             // 存储课程安排信息
+  courseEnrollments CourseEnrollment[]
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+
+  @@map("courses")
+}
+
+// 课程选修关系模型
+model CourseEnrollment {
+  id        String   @id @default(uuid())
+  studentId String   @default("")
+  student   Student? @relation(fields: [studentId], references: [studentId])
+  courseId  String   @default("")
+  course    Course?  @relation(fields: [courseId], references: [id])
+  enrolledAt DateTime @default(now())
+  status    String   @db.VarChar(20) @default("enrolled") // enrolled, dropped, completed
+
+  @@unique([studentId, courseId])
+  @@map("course_enrollments")
 }
