@@ -28,7 +28,6 @@ export async function getStudentById(studentId: string) {
     },
     include: {
       department: true,
-      major: true,
       courseEnrollments: true
     }
   });
@@ -172,3 +171,53 @@ export async function getCourseStudents(id: string) {
     }
   });
 }
+
+//删除课程
+export async function deleteCourse(id: string) {
+  return prisma.course.delete({
+    where: {
+      id,
+    },
+  });
+}
+
+//新建学院
+export async function createDepartment(department: any) {
+  return prisma.department.create({
+    data: department,
+  });
+}
+
+//根据学院id查询学院
+export async function getDepartmentById(id: string) {
+  return prisma.department.findUnique({
+    where: {
+      id,
+    },
+  });
+}
+
+//修改学院
+export async function updateDepartment(id: string, data: any) {
+  return prisma.department.update({
+    where: {
+      id,
+    },
+    data: data,
+  });
+}
+
+//删除学院
+export async function deleteDepartment(id: string) {
+  return prisma.department.delete({
+    where: {
+      id,
+    },
+  });
+}
+
+//获取所有学院列表
+export async function getAllDepartments() {
+  return prisma.department.findMany();
+}
+

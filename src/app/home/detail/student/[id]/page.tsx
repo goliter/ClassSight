@@ -91,7 +91,7 @@ const StudentDetailPage: React.FC<StudentDetailPageProps> = ({ params }) => {
           studentId: student.studentId || '未知',
           departmentId: student.departmentId || '',
           departmentName: student.department?.name || '未知',
-          major: student.major?.name || '未知',
+          major: student.major || '未知',
           grade: student.grade || '未知',
           class: student.class || '未知',
           email: student.email || '',

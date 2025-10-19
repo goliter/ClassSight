@@ -1,0 +1,54 @@
+import { isLogin } from "@/utils/isLogin";
+import { getTeacherById } from "@/db/db";
+
+export async function GET(
+  req: Request,
+  { params }: { params: { id: string } }
+) {
+  // 检查登录状态
+  const loginStatus = await isLogin();
+  if (loginStatus === 0) {
+    return new Response(JSON.stringify({ error: "未授权访问" }), {
+      status: 401,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+
+  try {
+    const { id } = params;
+    
+    // 验证ID格式
+    if (!id || typeof id !== 'string' || id.trim() === '') {
+      return new Response(JSON.stringify({ error: "无效的教师ID" }), {
+        status: 400,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+
+    const teacher = await getTeacherById(id);
+    if (!teacher) {
+      return new Response(JSON.stringify({ error: "教师不存在" }), {
+        status: 404,
+        headers: { 'Content-Type': 'application/json' }
+      });
+    }
+    
+    return new Response(JSON.stringify({ 
+      data: teacher,
+      status: 'success',
+      message: '获取教师详情成功'
+    }), {
+      status: 200,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  } catch (error) {
+    console.error("获取教师详情失败:", error);
+    const errorMessage = process.env.NODE_ENV === 'development' && error instanceof Error 
+      ? error.message 
+      : "服务器内部错误";
+    return new Response(JSON.stringify({ error: errorMessage }), {
+      status: 500,
+      headers: { 'Content-Type': 'application/json' }
+    });
+  }
+}

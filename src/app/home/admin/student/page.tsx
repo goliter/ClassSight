@@ -4,13 +4,6 @@ import React, { useState } from 'react';
 import PageHeader from '@/components/PageHeader';
 import PageFooter from '@/components/PageFooter';
 import StudentNavigation from '@/components/StudentNavigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from "sonner";
 import { Badge } from '@/components/ui/badge';
 import StudentAddDialog from '@/components/StudentAddDialog';
@@ -126,7 +119,7 @@ const StudentManagementPage: React.FC = () => {
     studentId: '',
     departmentId: '',
     major: '',
-    grade: '2023',
+    grade: '2025',
     class: '',
     email: '',
     phone: '',
@@ -177,7 +170,7 @@ const StudentManagementPage: React.FC = () => {
       departmentId: newStudent.departmentId || '',
       departmentName: department.name,
       major: newStudent.major || '',
-      grade: newStudent.grade || '2023',
+      grade: newStudent.grade || '2025',
       class: newStudent.class || '',
       email: newStudent.email || '',
       phone: newStudent.phone || '',

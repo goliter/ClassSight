@@ -4,7 +4,6 @@ import { Button } from '@/components/ui/button';
 import { Edit, Trash2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import AdminBadge from './AdminBadge';
 
 // 学院接口定义
 export interface Department {
@@ -12,8 +11,6 @@ export interface Department {
   name: string;
   code: string;
   description: string;
-  adminIds: string[];
-  adminNames: string[];
   studentCount: number;
   teacherCount: number;
   courseCount: number;
@@ -50,7 +47,6 @@ const DepartmentList: React.FC<DepartmentListProps> = ({
               <tr className="border-b border-gray-200 dark:border-gray-700">
                 <th className="py-3 text-left font-semibold">学院名称</th>
                 <th className="py-3 text-left font-semibold">学院代码</th>
-                <th className="py-3 text-left font-semibold">学院管理员</th>
                 <th className="py-3 text-left font-semibold">学生人数</th>
                 <th className="py-3 text-left font-semibold">教师人数</th>
                 <th className="py-3 text-left font-semibold">课程数量</th>
@@ -69,22 +65,6 @@ const DepartmentList: React.FC<DepartmentListProps> = ({
                       <div className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">{dept.description}</div>
                     </td>
                     <td className="py-4">{dept.code}</td>
-                    <td className="py-4">
-                      {dept.adminNames.length > 0 ? (
-                        <div className="flex flex-wrap gap-2">
-                          {dept.adminIds.map((adminId, index) => (
-                            <AdminBadge
-                              key={adminId}
-                              adminId={adminId}
-                              adminName={dept.adminNames[index]}
-                              readOnly={true}
-                            />
-                          ))}
-                        </div>
-                      ) : (
-                        <span className="text-gray-500">暂无管理员</span>
-                      )}
-                    </td>
                     <td className="py-4">
                       <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
                         {dept.studentCount}

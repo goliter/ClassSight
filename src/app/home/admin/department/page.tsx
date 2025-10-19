@@ -1,20 +1,14 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
 import React, { useState } from 'react';
 import PageHeader from '@/components/PageHeader';
 import PageFooter from '@/components/PageFooter';
 import StudentNavigation from '@/components/StudentNavigation';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Textarea } from "@/components/ui/textarea";
-import { Button } from '@/components/ui/button';
 import { toast } from "sonner";
 import SearchBar from '@/components/SearchBar';
 import Pagination from '@/components/Pagination';
 import DepartmentList from '@/components/DepartmentList';
-import { X } from 'lucide-react';
-import AdminBadge from '@/components/AdminBadge';
 
 // 学院接口定义
 interface Department {
@@ -22,18 +16,9 @@ interface Department {
   name: string;
   code: string;
   description: string;
-  adminIds: string[];
-  adminNames: string[];
   studentCount: number;
   teacherCount: number;
   courseCount: number;
-}
-
-// 管理员接口定义
-interface Admin {
-  id: string;
-  name: string;
-  role: string;
 }
 
 // 导入新组件
@@ -42,20 +27,8 @@ import DepartmentEditDialog from '@/components/DepartmentEditDialog';
 
 // 在组件中使用
 const DepartmentManagementPage: React.FC = () => {
-  // 模拟数据 - 支持多个管理员
-  const [departments, setDepartments] = useState<Department[]>([
-    { id: '1', name: '信息科学与技术学院', code: 'IST', description: '专注于计算机科学、软件工程和信息安全等领域的教学与研究', adminIds: ['AD10001', 'AD10002'], adminNames: ['张教授', '李教授'], studentCount: 1200, teacherCount: 85, courseCount: 120 },
-    { id: '2', name: '人工智能学院', code: 'AI', description: '培养人工智能领域的专业人才，研究机器学习、深度学习等前沿技术', adminIds: ['AD10003'], adminNames: ['王教授'], studentCount: 850, teacherCount: 62, courseCount: 95 },
-    { id: '3', name: '数学与统计学院', code: 'MAS', description: '提供数学、应用数学和统计学等专业的教育与研究', adminIds: [], adminNames: [], studentCount: 680, teacherCount: 45, courseCount: 80 },
-  ]);
-
-  // 模拟管理员数据
-  const [admins] = useState<Admin[]>([
-    { id: 'AD10001', name: '张教授', role: '系统管理员' },
-    { id: 'AD10002', name: '李教授', role: '学院管理员' },
-    { id: 'AD10003', name: '王教授', role: '学院管理员' },
-    { id: 'AD10004', name: '赵教授', role: '学院管理员' },
-  ]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // 状态管理 - 支持多个管理员
   const [searchTerm, setSearchTerm] = useState('');
@@ -64,7 +37,7 @@ const DepartmentManagementPage: React.FC = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedDepartment, setSelectedDepartment] = useState<Department | null>(null);
-  const [newDepartment, setNewDepartment] = useState<Partial<Department>>({ name: '', code: '', description: '', adminIds: [], adminNames: [] });
+  const [newDepartment, setNewDepartment] = useState<Partial<Department>>({ name: '', code: '', description: '' });
   const [editingDepartment, setEditingDepartment] = useState<Partial<Department>>({});
   const itemsPerPage = 10;
 
@@ -88,126 +61,137 @@ const DepartmentManagementPage: React.FC = () => {
     currentPage * itemsPerPage
   );
 
-  // 处理添加学院管理员
-  const handleAddAdmin = (adminId: string) => {
-    if (!newDepartment.adminIds?.includes(adminId)) {
-      const admin = admins.find(a => a.id === adminId);
-      if (admin) {
-        setNewDepartment(prev => ({
-          ...prev,
-          adminIds: [...(prev.adminIds || []), adminId],
-          adminNames: [...(prev.adminNames || []), admin.name]
+
+
+  // 从API获取所有学院
+  const fetchDepartments = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/department');
+      const data = await response.json();
+      
+      if (response.ok) {
+        // 确保每个学院对象都包含必需的字段，包括统计数据
+        const departmentsWithStats = data.data.map((dept: any) => ({
+          ...dept,
+          studentCount: dept.studentCount || 0,
+          teacherCount: dept.teacherCount || 0,
+          courseCount: dept.courseCount || 0
         }));
+        setDepartments(departmentsWithStats);
+      } else {
+        toast.error(data.error || '获取学院列表失败');
       }
+    } catch (error) {
+      console.error('获取学院列表错误:', error);
+      toast.error('网络错误，请稍后重试');
+    } finally {
+      setLoading(false);
     }
   };
 
-  // 处理移除学院管理员
-  const handleRemoveAdmin = (adminId: string) => {
-    setNewDepartment(prev => {
-      const adminIds = prev.adminIds || [];
-      const adminNames = prev.adminNames || [];
-      const index = adminIds.indexOf(adminId);
-      if (index > -1) {
-        return {
-          ...prev,
-          adminIds: [...adminIds.slice(0, index), ...adminIds.slice(index + 1)],
-          adminNames: [...adminNames.slice(0, index), ...adminNames.slice(index + 1)]
-        };
-      }
-      return prev;
-    });
-  };
+  // 初始化时获取数据
+  React.useEffect(() => {
+    fetchDepartments();
+  }, []);
 
-  // 处理编辑学院时添加管理员
-  const handleEditAddAdmin = (adminId: string) => {
-    if (!editingDepartment.adminIds?.includes(adminId)) {
-      const admin = admins.find(a => a.id === adminId);
-      if (admin) {
-        setEditingDepartment(prev => ({
-          ...prev,
-          adminIds: [...(prev.adminIds || []), adminId],
-          adminNames: [...(prev.adminNames || []), admin.name]
-        }));
-      }
-    }
-  };
-
-  // 处理编辑学院时移除管理员
-  const handleEditRemoveAdmin = (adminId: string) => {
-    setEditingDepartment(prev => {
-      const adminIds = prev.adminIds || [];
-      const adminNames = prev.adminNames || [];
-      const index = adminIds.indexOf(adminId);
-      if (index > -1) {
-        return {
-          ...prev,
-          adminIds: [...adminIds.slice(0, index), ...adminIds.slice(index + 1)],
-          adminNames: [...adminNames.slice(0, index), ...adminNames.slice(index + 1)]
-        };
-      }
-      return prev;
-    });
-  };
-
-  // 处理添加学院 - 不要求必须有管理员
-  const handleAddDepartment = () => {
+  // 处理添加学院
+  const handleAddDepartment = async () => {
     if (!newDepartment.name || !newDepartment.code) {
       toast.error('请填写学院名称和代码');
       return;
     }
 
-    const department: Department = {
-      id: (departments.length + 1).toString(),
-      name: newDepartment.name || '',
-      code: newDepartment.code || '',
-      description: newDepartment.description || '',
-      adminIds: newDepartment.adminIds || [],
-      adminNames: newDepartment.adminNames || [],
-      studentCount: 0,
-      teacherCount: 0,
-      courseCount: 0
-    };
+    try {
+      const response = await fetch('/api/department', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(newDepartment),
+      });
 
-    setDepartments([...departments, department]);
-    setIsAddDialogOpen(false);
-    setNewDepartment({ name: '', code: '', description: '', adminIds: [], adminNames: [] });
-    toast.success('学院创建成功');
+      const data = await response.json();
+      
+      if (response.ok) {
+        setIsAddDialogOpen(false);
+        setNewDepartment({ name: '', code: '', description: '' });
+        toast.success('学院创建成功');
+        // 重新获取学院列表
+        await fetchDepartments();
+      } else {
+        toast.error(data.error || '创建学院失败');
+      }
+    } catch (error) {
+      console.error('添加学院错误:', error);
+      toast.error('网络错误，请稍后重试');
+    }
   };
 
-  // 处理编辑学院 - 支持多个管理员
-  const handleEditDepartment = () => {
+  // 处理编辑学院
+  const handleEditDepartment = async () => {
     if (!selectedDepartment || !editingDepartment.name || !editingDepartment.code) {
       toast.error('请填写学院名称和代码');
       return;
     }
 
-    setDepartments(departments.map(dept => 
-      dept.id === selectedDepartment.id
-        ? { ...dept, name: editingDepartment.name || dept.name, code: editingDepartment.code || dept.code, description: editingDepartment.description || dept.description, adminIds: editingDepartment.adminIds || dept.adminIds, adminNames: editingDepartment.adminNames || dept.adminNames }
-        : dept
-    ));
+    try {
+      const response = await fetch(`/api/department/${selectedDepartment.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(editingDepartment),
+      });
 
-    setIsEditDialogOpen(false);
-    setSelectedDepartment(null);
-    setEditingDepartment({});
-    toast.success('学院信息已更新');
+      const data = await response.json();
+      
+      if (response.ok) {
+        setIsEditDialogOpen(false);
+        setSelectedDepartment(null);
+        setEditingDepartment({});
+        toast.success('学院信息已更新');
+        // 重新获取学院列表
+        await fetchDepartments();
+      } else {
+        toast.error(data.error || '更新学院信息失败');
+      }
+    } catch (error) {
+      console.error('编辑学院错误:', error);
+      toast.error('网络错误，请稍后重试');
+    }
   };
 
   // 处理删除学院
-  const handleDeleteDepartment = () => {
+  const handleDeleteDepartment = async () => {
     if (!selectedDepartment) return;
 
-    setDepartments(departments.filter(dept => dept.id !== selectedDepartment.id));
-    setIsDeleteDialogOpen(false);
-    setSelectedDepartment(null);
-    toast.success('学院已删除');
+    try {
+      const response = await fetch(`/api/department/${selectedDepartment.id}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setIsDeleteDialogOpen(false);
+        setSelectedDepartment(null);
+        toast.success('学院已删除');
+        // 重新获取学院列表
+        await fetchDepartments();
+      } else {
+        toast.error(data.error || '删除学院失败');
+      }
+    } catch (error) {
+      console.error('删除学院错误:', error);
+      toast.error('网络错误，请稍后重试');
+    }
   };
 
-  // 打开编辑对话框 - 支持多个管理员
+  // 打开编辑对话框
   const openEditDialog = (department: Department) => {
     setSelectedDepartment(department);
-    setEditingDepartment({ name: department.name, code: department.code, description: department.description, adminIds: [...department.adminIds], adminNames: [...department.adminNames] });
+    setEditingDepartment({ name: department.name, code: department.code, description: department.description });
     setIsEditDialogOpen(true);
   };
 
@@ -250,16 +234,32 @@ const DepartmentManagementPage: React.FC = () => {
           addButtonText="添加学院"
         />
 
-        {/* 使用提取的学院列表组件 */}
-        <DepartmentList
-          departments={paginatedDepartments}
-          selectedDepartment={selectedDepartment}
-          isDeleteDialogOpen={isDeleteDialogOpen}
-          onOpenEditDialog={openEditDialog}
-          onOpenDeleteDialog={openDeleteDialog}
-          onDeleteDepartment={handleDeleteDepartment}
-          onSetDeleteDialogOpen={setIsDeleteDialogOpen}
-        />
+        {/* 加载状态 */}
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="text-lg text-gray-500">加载中...</div>
+          </div>
+        ) : (
+          <>
+            {/* 使用提取的学院列表组件 */}
+            <DepartmentList
+              departments={paginatedDepartments}
+              selectedDepartment={selectedDepartment}
+              isDeleteDialogOpen={isDeleteDialogOpen}
+              onOpenEditDialog={openEditDialog}
+              onOpenDeleteDialog={openDeleteDialog}
+              onDeleteDepartment={handleDeleteDepartment}
+              onSetDeleteDialogOpen={setIsDeleteDialogOpen}
+            />
+            
+            {/* 空状态 */}
+            {filteredDepartments.length === 0 && (
+              <div className="text-center py-16 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <p className="text-gray-500 dark:text-gray-400">暂无学院数据</p>
+              </div>
+            )}
+          </>
+        )}
 
         {/* 使用提取的分页组件 */}
         {totalPages > 1 && (
@@ -278,9 +278,6 @@ const DepartmentManagementPage: React.FC = () => {
           onOpenChange={setIsAddDialogOpen}
           newDepartment={newDepartment}
           setNewDepartment={setNewDepartment}
-          admins={admins}
-          onAddAdmin={handleAddAdmin}
-          onRemoveAdmin={handleRemoveAdmin}
           onAddDepartment={handleAddDepartment}
         />
 
@@ -290,9 +287,6 @@ const DepartmentManagementPage: React.FC = () => {
           onOpenChange={setIsEditDialogOpen}
           editingDepartment={editingDepartment}
           setEditingDepartment={setEditingDepartment}
-          admins={admins}
-          onAddAdmin={handleEditAddAdmin}
-          onRemoveAdmin={handleEditRemoveAdmin}
           onEditDepartment={handleEditDepartment}
         />
       </main>
