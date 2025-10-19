@@ -160,7 +160,6 @@ export default function Home() {
         <div className="py-6 text-center text-white/80 text-lg">
           <p>
             © {new Date().getFullYear()} ClassSight - 课堂行为洞察系统.
-            与"小黑盒"设备完美结合.
           </p>
         </div>
       </div>

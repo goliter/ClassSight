@@ -111,10 +111,12 @@ model Course {
   teacher     Teacher?          @relation(fields: [teacherId], references: [teacherId])
   departmentId String           @default("")
   department  Department?       @relation(fields: [departmentId], references: [id])
+  type        String            @db.VarChar(50) @default("专业课程") // 新增：课程类型
   credits     Int               @default(0)
   description String?           @db.Text
   status      String            @db.VarChar(20) @default("active") // active, inactive, pending
   schedule    Json?             // 存储课程安排信息
+  studentCount Int              @default(0)
   courseEnrollments CourseEnrollment[]
   createdAt   DateTime          @default(now())
   updatedAt   DateTime          @updatedAt

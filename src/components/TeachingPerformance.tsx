@@ -27,7 +27,7 @@ const TeachingPerformance: React.FC<TeachingPerformanceProps> = ({ performanceDa
               <th className="py-3 text-left">课程名称</th>
               <th className="py-3 text-left">评分</th>
               <th className="py-3 text-left">学生人数</th>
-              <th className="py-3 text-left">完成率</th>
+              <th className="py-3 text-left">出勤率</th>
             </tr>
           </thead>
           <tbody>

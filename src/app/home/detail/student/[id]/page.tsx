@@ -1,6 +1,7 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { User, Mail, Phone, BookOpen, Building2, GraduationCap, Calendar, Clock, Award, ChevronLeft } from "lucide-react";
 import CourseList from "@/components/CourseList";
@@ -15,7 +16,7 @@ interface Student {
   name: string;
   studentId: string;
   departmentId: string;
-  departmentName: string;
+  departmentName?: string;
   major: string;
   grade: string;
   class: string;
@@ -40,260 +41,126 @@ interface Course {
 const StudentDetailPage: React.FC<StudentDetailPageProps> = ({ params }) => {
   const router = useRouter();
   const studentId = params.id;
-
-  // 模拟学生数据 - 实际项目中应从API获取
-  const getStudentData = (id: string): Student => {
-    const students: Student[] = [
-      {
-        id: '1',
-        name: '张三',
-        studentId: '20230001',
-        departmentId: '1',
-        departmentName: '信息科学与技术学院',
-        major: '计算机科学与技术',
-        grade: '2023',
-        class: '计算机1班',
-        email: 'zhang.san@example.com',
-        phone: '13800138001',
-        enrollmentDate: '2023-09-01',
-        status: 'active',
-        courseCount: 5
-      },
-      {
-        id: '2',
-        name: '李四',
-        studentId: '20230002',
-        departmentId: '1',
-        departmentName: '信息科学与技术学院',
-        major: '软件工程',
-        grade: '2023',
-        class: '软件2班',
-        email: 'li.si@example.com',
-        phone: '13800138002',
-        enrollmentDate: '2023-09-01',
-        status: 'active',
-        courseCount: 6
-      },
-      {
-        id: '3',
-        name: '王五',
-        studentId: '20220001',
-        departmentId: '2',
-        departmentName: '人工智能学院',
-        major: '人工智能',
-        grade: '2022',
-        class: '智能1班',
-        email: 'wang.wu@example.com',
-        phone: '13800138003',
-        enrollmentDate: '2022-09-01',
-        status: 'active',
-        courseCount: 4
-      },
-      {
-        id: '4',
-        name: '赵六',
-        studentId: '20210001',
-        departmentId: '3',
-        departmentName: '数学与统计学院',
-        major: '应用数学',
-        grade: '2021',
-        class: '数学1班',
-        email: 'zhao.liu@example.com',
-        phone: '13800138004',
-        enrollmentDate: '2021-09-01',
-        status: 'graduated',
-        courseCount: 3
+  
+  // 使用useState管理学生数据状态
+  const [studentData, setStudentData] = useState<Student>({
+    id: studentId,
+    name: '未知学生',
+    studentId: '未知',
+    departmentId: '',
+    departmentName: '未知',
+    major: '未知',
+    grade: '未知',
+    class: '未知',
+    email: '',
+    phone: '',
+    enrollmentDate: '未知',
+    status: 'active',
+    courseCount: 0
+  });
+  
+  // 使用useState管理课程数据状态
+  const [studentCourses, setStudentCourses] = useState<Course[]>([]);
+  
+  // 使用useEffect获取学生数据
+  useEffect(() => {
+    const fetchStudentData = async () => {
+      try {
+        const response = await fetch(`/api/student/${studentId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`获取学生信息失败: ${response.status}`);
+        }
+        
+        const student = await response.json();
+        
+        // 检查是否获取到学生数据
+        if (!student) {
+          throw new Error('未找到学生信息');
+        }
+        
+        // 将API返回的数据映射到Student接口并更新状态
+        const mappedStudentData: Student = {
+          id: student.studentId,
+          name: student.name || '未知',
+          studentId: student.studentId || '未知',
+          departmentId: student.departmentId || '',
+          departmentName: student.department?.name || '未知',
+          major: student.major?.name || '未知',
+          grade: student.grade || '未知',
+          class: student.class || '未知',
+          email: student.email || '',
+          phone: student.phone || '',
+          enrollmentDate: student.enrollmentDate ? new Date(student.enrollmentDate).toLocaleDateString() : '未知',
+          status: (student.status as 'active' | 'suspended' | 'graduated') || 'active',
+          courseCount: student.courseCount || 0
+        };
+        
+        setStudentData(mappedStudentData);
+      } catch (error) {
+        console.error('获取学生信息失败:', error);
+        // 错误情况下保持默认数据
       }
-    ];
-
-    // 根据ID查找学生
-    const student = students.find(s => s.id === id);
-    // 如果找不到，返回默认学生
-    return student || students[0];
-  };
-
-  // 模拟学生课程数据
-  const getStudentCourses = (studentId: string): Course[] => {
-    // 为不同学生设置不同的课程
-    const courseMap: Record<string, Course[]> = {
-      '1': [
-        {
-          id: 'c1',
-          name: '高等数学',
-          teacher: '李教授',
-          department: '数学与统计学院',
-          type: '必修课',
-          schedule: '周一 08:00-10:00',
-          bgColor: 'bg-blue-500 dark:bg-blue-700'
-        },
-        {
-          id: 'c2',
-          name: '大学英语',
-          teacher: '王教授',
-          department: '外国语学院',
-          type: '必修课',
-          schedule: '周二 10:00-12:00',
-          bgColor: 'bg-green-500 dark:bg-green-700'
-        },
-        {
-          id: 'c3',
-          name: '计算机基础',
-          teacher: '张教授',
-          department: '信息科学与技术学院',
-          type: '必修课',
-          schedule: '周三 14:00-16:00',
-          bgColor: 'bg-purple-500 dark:bg-purple-700'
-        },
-        {
-          id: 'c4',
-          name: '程序设计基础',
-          teacher: '刘教授',
-          department: '信息科学与技术学院',
-          type: '必修课',
-          schedule: '周四 09:00-11:00',
-          bgColor: 'bg-amber-500 dark:bg-amber-700'
-        },
-        {
-          id: 'c5',
-          name: '线性代数',
-          teacher: '陈教授',
-          department: '数学与统计学院',
-          type: '必修课',
-          schedule: '周五 13:30-15:30',
-          bgColor: 'bg-pink-500 dark:bg-pink-700'
-        }
-      ],
-      '2': [
-        {
-          id: 'c6',
-          name: '高等数学',
-          teacher: '李教授',
-          department: '数学与统计学院',
-          type: '必修课',
-          schedule: '周一 08:00-10:00',
-          bgColor: 'bg-blue-500 dark:bg-blue-700'
-        },
-        {
-          id: 'c7',
-          name: '大学英语',
-          teacher: '王教授',
-          department: '外国语学院',
-          type: '必修课',
-          schedule: '周二 10:00-12:00',
-          bgColor: 'bg-green-500 dark:bg-green-700'
-        },
-        {
-          id: 'c8',
-          name: '软件工程导论',
-          teacher: '张教授',
-          department: '信息科学与技术学院',
-          type: '必修课',
-          schedule: '周三 14:00-16:00',
-          bgColor: 'bg-purple-500 dark:bg-purple-700'
-        },
-        {
-          id: 'c9',
-          name: '数据结构',
-          teacher: '刘教授',
-          department: '信息科学与技术学院',
-          type: '必修课',
-          schedule: '周四 09:00-11:00',
-          bgColor: 'bg-amber-500 dark:bg-amber-700'
-        },
-        {
-          id: 'c10',
-          name: '离散数学',
-          teacher: '陈教授',
-          department: '数学与统计学院',
-          type: '必修课',
-          schedule: '周五 13:30-15:30',
-          bgColor: 'bg-pink-500 dark:bg-pink-700'
-        },
-        {
-          id: 'c11',
-          name: '算法分析',
-          teacher: '周教授',
-          department: '信息科学与技术学院',
-          type: '必修课',
-          schedule: '周五 16:00-18:00',
-          bgColor: 'bg-indigo-500 dark:bg-indigo-700'
-        }
-      ],
-      '3': [
-        {
-          id: 'c12',
-          name: '人工智能基础',
-          teacher: '李教授',
-          department: '人工智能学院',
-          type: '必修课',
-          schedule: '周一 08:00-10:00',
-          bgColor: 'bg-blue-500 dark:bg-blue-700'
-        },
-        {
-          id: 'c13',
-          name: '机器学习',
-          teacher: '王教授',
-          department: '人工智能学院',
-          type: '必修课',
-          schedule: '周二 10:00-12:00',
-          bgColor: 'bg-green-500 dark:bg-green-700'
-        },
-        {
-          id: 'c14',
-          name: '深度学习',
-          teacher: '张教授',
-          department: '人工智能学院',
-          type: '必修课',
-          schedule: '周三 14:00-16:00',
-          bgColor: 'bg-purple-500 dark:bg-purple-700'
-        },
-        {
-          id: 'c15',
-          name: '神经网络',
-          teacher: '刘教授',
-          department: '人工智能学院',
-          type: '必修课',
-          schedule: '周四 09:00-11:00',
-          bgColor: 'bg-amber-500 dark:bg-amber-700'
-        }
-      ],
-      '4': [
-        {
-          id: 'c16',
-          name: '数学分析',
-          teacher: '李教授',
-          department: '数学与统计学院',
-          type: '必修课',
-          schedule: '周一 08:00-10:00',
-          bgColor: 'bg-blue-500 dark:bg-blue-700'
-        },
-        {
-          id: 'c17',
-          name: '概率论',
-          teacher: '王教授',
-          department: '数学与统计学院',
-          type: '必修课',
-          schedule: '周二 10:00-12:00',
-          bgColor: 'bg-green-500 dark:bg-green-700'
-        },
-        {
-          id: 'c18',
-          name: '统计学',
-          teacher: '张教授',
-          department: '数学与统计学院',
-          type: '必修课',
-          schedule: '周三 14:00-16:00',
-          bgColor: 'bg-purple-500 dark:bg-purple-700'
-        }
-      ]
     };
-
-    // 返回对应学生的课程，如果没有则返回默认课程
-    return courseMap[studentId] || courseMap['1'];
-  };
-
-  const studentData = getStudentData(studentId);
-  const studentCourses = getStudentCourses(studentId);
+    
+    // 获取学生课程数据
+    const fetchStudentCourses = async () => {
+      try {
+        const response = await fetch(`/api/course/student/${studentId}`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json'
+          }
+        });
+        
+        if (!response.ok) {
+          throw new Error(`获取课程信息失败: ${response.status}`);
+        }
+        
+        const coursesData = await response.json();
+        
+        // 将API返回的数据映射到Course接口
+        const mappedCourses: Course[] = coursesData.map((courseEnrollment: any) => {
+          const course = courseEnrollment.course;
+          // 为不同课程类型设置不同的背景颜色
+          const bgColorMap: Record<string, string> = {
+            '必修课': 'bg-blue-500 dark:bg-blue-700',
+            '选修课': 'bg-green-500 dark:bg-green-700',
+            '通识课': 'bg-purple-500 dark:bg-purple-700',
+            '实践课': 'bg-amber-500 dark:bg-amber-700'
+          };
+          
+          return {
+            id: course.id,
+            name: course.name || '未知课程',
+            teacher: course.teacherName || '未知教师',
+            department: course.departmentName || '未知院系',
+            type: course.type || '未知类型',
+            schedule: course.schedule || '未知时间',
+            bgColor: bgColorMap[course.type] || 'bg-gray-500 dark:bg-gray-700'
+          };
+        });
+        
+        setStudentCourses(mappedCourses);
+      } catch (error) {
+        console.error('获取课程信息失败:', error);
+        // 错误情况下保持空数组
+        setStudentCourses([]);
+      }
+    };
+    
+    // 并行获取学生信息和课程数据
+    Promise.all([
+      fetchStudentData(),
+      fetchStudentCourses()
+    ]);
+  }, [studentId]);
+  
 
   const handleBack = () => {
     router.back();

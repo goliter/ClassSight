@@ -1,7 +1,8 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React from "react";
-import { useRouter } from "next/navigation";
+import React, { useState, useEffect } from "react";
+import { useRouter, useParams } from "next/navigation";
 import {
   User,
   Mail,
@@ -21,24 +22,40 @@ interface TeacherDetailPageProps {
   params: { id: string };
 }
 
-// 教师接口定义
+// 简化的教师接口定义 - 只包含页面实际使用的字段
 interface Teacher {
-  id: string;
-  name: string;
   teacherId: string;
+  name: string;
   departmentId: string;
-  departmentName: string;
   rank: string;
   email: string;
-  phone: string;
-  office: string;
-  hireDate: string;
+  phone: string | null;
+  office: string | null;
+  hireDate: Date;
   status: "active" | "onLeave" | "resigned";
-  courseCount: number;
-  studentCount: number;
+  department?: {
+    name: string;
+  } | null;
+  courses?: CourseFromDb[];
 }
 
-// 课程接口定义 - 与CourseList组件保持一致
+// 数据库中的课程结构（仅用于数据映射）
+interface CourseFromDb {
+  id: string;
+  name: string;
+  code: string;
+  departmentId: string;
+  type: string;
+  credits: number;
+  description: string | null;
+  schedule: any | null;
+  status: string;
+  studentCount: number;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+// 页面展示用的课程接口 - 调整为与CourseList组件完全匹配的结构
 interface Course {
   id: string;
   name: string;
@@ -51,187 +68,131 @@ interface Course {
 
 const TeacherDetailPage: React.FC<TeacherDetailPageProps> = ({ params }) => {
   const router = useRouter();
-  const teacherId = params.id;
 
-  // 模拟教师数据 - 实际项目中应从API获取
-  const getTeacherData = (id: string): Teacher => {
-    const teachers: Teacher[] = [
-      {
-        id: "1",
-        name: "张教授",
-        teacherId: "T10001",
-        departmentId: "1",
-        departmentName: "信息科学与技术学院",
-        rank: "教授",
-        email: "zhang.prof@example.com",
-        phone: "13900139001",
-        office: "科技楼401室",
-        hireDate: "2010-09-01",
-        status: "active",
-        courseCount: 3,
-        studentCount: 120,
-      },
-      {
-        id: "2",
-        name: "李副教授",
-        teacherId: "T10002",
-        departmentId: "1",
-        departmentName: "信息科学与技术学院",
-        rank: "副教授",
-        email: "li.assoc@example.com",
-        phone: "13900139002",
-        office: "科技楼402室",
-        hireDate: "2015-09-01",
-        status: "active",
-        courseCount: 4,
-        studentCount: 150,
-      },
-      {
-        id: "3",
-        name: "王讲师",
-        teacherId: "T10003",
-        departmentId: "2",
-        departmentName: "人工智能学院",
-        rank: "讲师",
-        email: "wang.lect@example.com",
-        phone: "13900139003",
-        office: "智能楼301室",
-        hireDate: "2020-09-01",
-        status: "onLeave",
-        courseCount: 0,
-        studentCount: 0,
-      },
-      {
-        id: "4",
-        name: "赵助教",
-        teacherId: "T10004",
-        departmentId: "3",
-        departmentName: "数学与统计学院",
-        rank: "助教",
-        email: "zhao.assist@example.com",
-        phone: "13900139004",
-        office: "数理楼201室",
-        hireDate: "2022-09-01",
-        status: "resigned",
-        courseCount: 0,
-        studentCount: 0,
-      },
-    ];
+  const routeParams = useParams();
+  const teacherId = routeParams.id as string;
+  const [teacherData, setTeacherData] = useState<Teacher | null>(null);
+  const [teacherCourses, setTeacherCourses] = useState<Course[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
 
-    // 根据ID查找教师
-    const teacher = teachers.find((t) => t.id === id);
-    // 如果找不到，返回默认教师
-    return teacher || teachers[0];
+  // 从API获取教师数据
+  const fetchTeacherDataFromApi = async (id: string) => {
+    try {
+      const response = await fetch(`/api/teacher/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`获取教师信息失败: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('获取教师数据失败:', error);
+      throw error;
+    }
   };
 
-  // 模拟教师课程数据
-  const getTeacherCourses = (teacherId: string): Course[] => {
-    // 为不同教师设置不同的课程
-    const courseMap: Record<string, Course[]> = {
-      "1": [
-        {
-          id: "c1",
-          name: "Web前端开发",
-          teacher: "张教授",
-          department: "信息科学与技术学院",
-          type: "理论课程",
-          schedule: "周一 14:00-16:00",
-          bgColor: "bg-blue-500 dark:bg-blue-700",
-        },
-        {
-          id: "c2",
-          name: "React框架进阶",
-          teacher: "张教授",
-          department: "信息科学与技术学院",
-          type: "实践课程",
-          schedule: "周三 09:00-11:00",
-          bgColor: "bg-green-500 dark:bg-green-700",
-        },
-        {
-          id: "c3",
-          name: "前端性能优化",
-          teacher: "张教授",
-          department: "信息科学与技术学院",
-          type: "专业选修课",
-          schedule: "周五 13:30-15:30",
-          bgColor: "bg-purple-500 dark:bg-purple-700",
-        },
-      ],
-      "2": [
-        {
-          id: "c4",
-          name: "数据结构与算法",
-          teacher: "李副教授",
-          department: "信息科学与技术学院",
-          type: "专业必修课",
-          schedule: "周二 10:00-12:00",
-          bgColor: "bg-blue-500 dark:bg-blue-700",
-        },
-        {
-          id: "c5",
-          name: "操作系统原理",
-          teacher: "李副教授",
-          department: "信息科学与技术学院",
-          type: "专业必修课",
-          schedule: "周四 14:00-16:00",
-          bgColor: "bg-green-500 dark:bg-green-700",
-        },
-        {
-          id: "c6",
-          name: "计算机网络",
-          teacher: "李副教授",
-          department: "信息科学与技术学院",
-          type: "专业必修课",
-          schedule: "周五 09:00-11:00",
-          bgColor: "bg-purple-500 dark:bg-purple-700",
-        },
-        {
-          id: "c7",
-          name: "软件工程导论",
-          teacher: "李副教授",
-          department: "信息科学与技术学院",
-          type: "专业必修课",
-          schedule: "周三 13:30-15:30",
-          bgColor: "bg-amber-500 dark:bg-amber-700",
-        },
-      ],
-      "3": [
-        {
-          id: "c8",
-          name: "人工智能导论",
-          teacher: "王讲师",
-          department: "人工智能学院",
-          type: "专业必修课",
-          schedule: "周一 09:00-11:00",
-          bgColor: "bg-blue-500 dark:bg-blue-700",
-        },
-        {
-          id: "c9",
-          name: "机器学习基础",
-          teacher: "王讲师",
-          department: "人工智能学院",
-          type: "专业选修课",
-          schedule: "周二 14:00-16:00",
-          bgColor: "bg-green-500 dark:bg-green-700",
-        },
-        {
-          id: "c10",
-          name: "深度学习原理",
-          teacher: "王讲师",
-          department: "人工智能学院",
-          type: "专业选修课",
-          schedule: "周四 10:00-12:00",
-          bgColor: "bg-purple-500 dark:bg-purple-700",
-        },
-      ],
+  // 从API获取教师课程数据
+  const fetchTeacherCoursesFromApi = async (id: string) => {
+    try {
+      const response = await fetch(`/api/course/teacher/${id}`, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error(`获取课程信息失败: ${response.status}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('获取课程数据失败:', error);
+      throw error;
+    }
+  };
+
+  // 使用API获取教师数据和课程信息
+  useEffect(() => {
+    const fetchTeacherData = async () => {
+      try {
+        setLoading(true);
+        
+        // 并行获取教师数据和课程数据
+        const [teacherDataResult, coursesDataResult] = await Promise.all([
+          fetchTeacherDataFromApi(teacherId),
+          fetchTeacherCoursesFromApi(teacherId)
+        ]);
+        
+        if (teacherDataResult) {
+          // 格式化教师数据以匹配页面需要的结构
+          setTeacherData({
+            teacherId: teacherDataResult.teacherId,
+            name: teacherDataResult.name,
+            departmentId: teacherDataResult.departmentId,
+            rank: teacherDataResult.rank,
+            email: teacherDataResult.email,
+            phone: teacherDataResult.phone,
+            office: teacherDataResult.office,
+            hireDate: teacherDataResult.hireDate ? new Date(teacherDataResult.hireDate) : new Date(),
+            status: (teacherDataResult.status as "active" | "onLeave" | "resigned") || "active",
+            department: teacherDataResult.department,
+            courses: coursesDataResult
+          });
+
+          // 重新格式化课程数据，确保与CourseList组件的Course接口完全匹配
+          const formattedCourses: Course[] = [];
+          if (coursesDataResult && coursesDataResult.length > 0) {
+            formattedCourses.push(...coursesDataResult.map((course: any) => ({
+              id: course.id || `course-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              name: course.name || "未命名课程",
+              teacher: teacherDataResult.name,
+              department: teacherDataResult.department?.name || course.departmentName || "",
+              type: course.type || "专业课程",
+              schedule: formatSchedule(course.schedule),
+              bgColor: getRandomColor(),
+            })));
+          }
+          setTeacherCourses(formattedCourses);
+        }
+      } catch (error) {
+        console.error("获取教师数据失败:", error);
+        setTeacherCourses([]);
+      } finally {
+        setLoading(false);
+      }
     };
 
-    // 返回对应教师的课程，如果没有则返回默认课程
-    return courseMap[teacherId] || courseMap["1"];
+    fetchTeacherData();
+  }, [teacherId]);
+
+  // 生成随机背景色
+  const getRandomColor = () => {
+    const colors = [
+      "bg-blue-500 dark:bg-blue-700",
+      "bg-green-500 dark:bg-green-700",
+      "bg-purple-500 dark:bg-purple-700",
+      "bg-amber-500 dark:bg-amber-700",
+      "bg-pink-500 dark:bg-pink-700",
+    ];
+    return colors[Math.floor(Math.random() * colors.length)];
   };
 
-  const teacherData = getTeacherData(teacherId);
-  const teacherCourses = getTeacherCourses(teacherId);
+  // 格式化日期显示
+  const formatDate = (date: Date): string => {
+    if (!date || !(date instanceof Date)) {
+      return "未知";
+    }
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
 
   const handleBack = () => {
     router.back();
@@ -259,7 +220,29 @@ const TeacherDetailPage: React.FC<TeacherDetailPageProps> = ({ params }) => {
     return statusMap[status as keyof typeof statusMap] || statusMap.active;
   };
 
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-gray-900 dark:text-gray-100 text-lg">
+          加载中...
+        </div>
+      </div>
+    );
+  }
+
+  if (!teacherData) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 flex items-center justify-center">
+        <div className="text-gray-900 dark:text-gray-100 text-lg">
+          未找到该教师信息
+        </div>
+      </div>
+    );
+  }
+
   const statusInfo = getStatusInfo(teacherData.status);
+  const formattedHireDate = formatDate(teacherData.hireDate);
+  const courseCount = teacherData.courses?.length || 0;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100 transition-colors duration-300">
@@ -275,7 +258,6 @@ const TeacherDetailPage: React.FC<TeacherDetailPageProps> = ({ params }) => {
 
         {/* 教师信息卡片 */}
         <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden mb-8 transition-all duration-300 hover:shadow-xl">
-          
           {/* 教师基本信息 */}
           <div className="px-6 pb-6 mt-0">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
@@ -343,7 +325,7 @@ const TeacherDetailPage: React.FC<TeacherDetailPageProps> = ({ params }) => {
                 </div>
                 <div className="col-span-2 font-medium flex items-center">
                   <Phone className="h-4 w-4 mr-2 text-blue-500" />
-                  {teacherData.phone}
+                  {teacherData.phone || "暂无"}
                 </div>
               </div>
             </div>
@@ -363,7 +345,7 @@ const TeacherDetailPage: React.FC<TeacherDetailPageProps> = ({ params }) => {
                 </div>
                 <div className="col-span-2 font-medium flex items-center">
                   <Building2 className="h-4 w-4 mr-2 text-purple-500" />
-                  {teacherData.departmentName}
+                  {teacherData.department?.name || "暂无"}
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4 pb-4 border-b border-gray-100 dark:border-gray-700">
@@ -378,7 +360,7 @@ const TeacherDetailPage: React.FC<TeacherDetailPageProps> = ({ params }) => {
                 </div>
                 <div className="col-span-2 font-medium flex items-center">
                   <MapPin className="h-4 w-4 mr-2 text-purple-500" />
-                  {teacherData.office}
+                  {teacherData.office || "暂无"}
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4">
@@ -386,7 +368,7 @@ const TeacherDetailPage: React.FC<TeacherDetailPageProps> = ({ params }) => {
                   入职日期
                 </div>
                 <div className="col-span-2 font-medium">
-                  {teacherData.hireDate}
+                  {formattedHireDate}
                 </div>
               </div>
             </div>
@@ -406,7 +388,7 @@ const TeacherDetailPage: React.FC<TeacherDetailPageProps> = ({ params }) => {
               <div className="text-sm text-gray-500 dark:text-gray-400">
                 入职日期
               </div>
-              <div className="font-medium mt-1">{teacherData.hireDate}</div>
+              <div className="font-medium mt-1">{formattedHireDate}</div>
             </div>
 
             <div className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
@@ -422,10 +404,10 @@ const TeacherDetailPage: React.FC<TeacherDetailPageProps> = ({ params }) => {
             <div className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <Clock className="h-6 w-6 text-green-500 mb-2" />
               <div className="text-sm text-gray-500 dark:text-gray-400">
-                学生人数
+                课程数量
               </div>
               <div className="font-medium mt-1">
-                {teacherData.studentCount}人
+                {courseCount}门
               </div>
             </div>
           </div>
@@ -458,3 +440,28 @@ const TeacherDetailPage: React.FC<TeacherDetailPageProps> = ({ params }) => {
 };
 
 export default TeacherDetailPage;
+
+// 添加格式化日程的辅助函数
+const formatSchedule = (schedule: any): string => {
+  if (!schedule) {
+    return "暂无课程安排";
+  }
+  
+  // 处理可能的JSON对象或字符串
+  try {
+    if (typeof schedule === 'string') {
+      // 如果已经是字符串，直接返回
+      return schedule;
+    } else if (typeof schedule === 'object') {
+      // 如果是对象，尝试转换为可读性较好的字符串
+      const scheduleEntries = Object.entries(schedule);
+      if (scheduleEntries.length > 0) {
+        return scheduleEntries.map(([day, time]) => `${day}: ${time}`).join(', ');
+      }
+    }
+  } catch (error) {
+    console.error("格式化课程安排失败:", error);
+  }
+  
+  return "暂无课程安排";
+};

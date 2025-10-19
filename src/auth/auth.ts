@@ -1,6 +1,6 @@
 import NextAuth from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import { studentOperations, teacherOperations, adminOperations } from "@/db/db";
+import { getStudentById, getTeacherById, getAdminById } from "@/db/db";
 
 // 定义我们系统中的用户类型
 interface SystemUser {
@@ -34,18 +34,16 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
         }
 
         let user = null;
-        let operations = null;
         if (role === "student") {
-          operations = studentOperations;
+          user = await getStudentById(account);
         } else if (role === "teacher") {
-          operations = teacherOperations;
+          user = await getTeacherById(account);
         } else if (role === "admin") {
-          operations = adminOperations;
+          user = await getAdminById(account);
         } else {
           throw new Error("不存在该用户");
         }
 
-        user = await operations.findById(account);
         if (!user) {
           throw new Error("用户不存在");
         }

@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 "use server";
 
-import { studentOperations, teacherOperations, adminOperations } from "../db/db";
+import { getStudentById, getTeacherById, getAdminById, createStudent, createTeacher, createAdmin } from "../db/db";  
 import { signIn } from "./auth";
 
 export async function login(formData: FormData) {
@@ -46,11 +46,11 @@ export async function register(formData: FormData) {
   }
   function isExist(account: string, role: string) {
     if (role === "0") {
-      return studentOperations.findById(account);
+      return getStudentById(account);
     } else if (role === "1") {
-      return teacherOperations.findById(account);
+      return getTeacherById(account);
     } else {
-      return adminOperations.findById(account);
+      return getAdminById(account);
     }
   }
 
@@ -59,11 +59,11 @@ export async function register(formData: FormData) {
   }
   try {
     if (role === "0") {
-      await studentOperations.create({ studentId: account, password });
+      await createStudent({studentId: account, password :password});
     } else if (role === "1") {
-      await teacherOperations.create({ teacherId: account, password });
+      await createTeacher({teacherId: account, password :password});
     } else {
-      await adminOperations.create({ adminId: account, password });
+      await createAdmin({adminId: account, password :password});
     }
   } catch (error) {
     throw new Error("注册失败");
