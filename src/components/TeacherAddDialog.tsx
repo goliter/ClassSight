@@ -24,6 +24,7 @@ interface Teacher {
   status: 'active' | 'onLeave' | 'resigned';
   courseCount: number;
   studentCount: number;
+  password?: string; // 添加密码字段
 }
 
 interface TeacherAddDialogProps {
@@ -33,6 +34,7 @@ interface TeacherAddDialogProps {
   setNewTeacher: React.Dispatch<React.SetStateAction<Partial<Teacher>>>;
   departments: Department[];
   onAddTeacher: () => void;
+  isSubmitting?: boolean;
 }
 
 const TeacherAddDialog: React.FC<TeacherAddDialogProps> = ({
@@ -41,7 +43,8 @@ const TeacherAddDialog: React.FC<TeacherAddDialogProps> = ({
   newTeacher,
   setNewTeacher,
   departments,
-  onAddTeacher
+  onAddTeacher,
+  isSubmitting = false
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -52,7 +55,7 @@ const TeacherAddDialog: React.FC<TeacherAddDialogProps> = ({
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <label htmlFor="name" className="text-right text-sm font-medium">
-              姓名
+              姓名 <span className="text-red-500">*</span>
             </label>
             <Input
               id="name"
@@ -64,7 +67,7 @@ const TeacherAddDialog: React.FC<TeacherAddDialogProps> = ({
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
             <label htmlFor="teacherId" className="text-right text-sm font-medium">
-              工号
+              工号 <span className="text-red-500">*</span>
             </label>
             <Input
               id="teacherId"
@@ -75,8 +78,21 @@ const TeacherAddDialog: React.FC<TeacherAddDialogProps> = ({
             />
           </div>
           <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="password" className="text-right text-sm font-medium">
+              密码 <span className="text-red-500">*</span> (至少6位)
+            </label>
+            <Input
+              id="password"
+              type="password"
+              value={newTeacher.password || ""}
+              onChange={(e) => setNewTeacher({ ...newTeacher, password: e.target.value })}
+              className="col-span-3"
+              placeholder="请输入教师密码"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
             <label htmlFor="department" className="text-right text-sm font-medium">
-              所属学院
+              所属学院 <span className="text-red-500">*</span>
             </label>
             <Select
               value={newTeacher.departmentId || ""}
@@ -104,7 +120,7 @@ const TeacherAddDialog: React.FC<TeacherAddDialogProps> = ({
           {/* 其他表单字段... */}
           <div className="grid grid-cols-4 items-center gap-4">
             <label htmlFor="rank" className="text-right text-sm font-medium">
-              职称
+              职称 <span className="text-red-500">*</span>
             </label>
             <Select
               value={newTeacher.rank || ""}
@@ -114,10 +130,10 @@ const TeacherAddDialog: React.FC<TeacherAddDialogProps> = ({
                 <SelectValue placeholder="选择职称" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="教授">教授</SelectItem>
-                <SelectItem value="副教授">副教授</SelectItem>
-                <SelectItem value="讲师">讲师</SelectItem>
-                <SelectItem value="助教">助教</SelectItem>
+                <SelectItem key="教授" value="教授">教授</SelectItem>
+                <SelectItem key="副教授" value="副教授">副教授</SelectItem>
+                <SelectItem key="讲师" value="讲师">讲师</SelectItem>
+                <SelectItem key="助教" value="助教">助教</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -186,18 +202,28 @@ const TeacherAddDialog: React.FC<TeacherAddDialogProps> = ({
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">在职</SelectItem>
-                <SelectItem value="onLeave">休假</SelectItem>
-                <SelectItem value="resigned">离职</SelectItem>
+                <SelectItem key="active" value="active">在职</SelectItem>
+                <SelectItem key="onLeave" value="onLeave">休假</SelectItem>
+                <SelectItem key="resigned" value="resigned">离职</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
         <DialogFooter>
-          <Button variant="ghost" onClick={() => onOpenChange(false)}>
+          <Button 
+            variant="ghost" 
+            onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
+          >
             取消
           </Button>
-          <Button onClick={onAddTeacher}>添加</Button>
+          <Button 
+            onClick={onAddTeacher}
+            disabled={isSubmitting}
+            className="min-w-[80px]"
+          >
+            {isSubmitting ? '添加中...' : '添加'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

@@ -55,6 +55,7 @@ model Teacher {
   role           Int           @default(1)
   name           String        @db.VarChar(50) @default("")
   departmentId   String        @default("")
+  departmentName String        @default("")
   department     Department?   @relation(fields: [departmentId], references: [id])
   major          String        @db.VarChar(100) @default("") // 将majors改为字符串类型
   rank           String        @db.VarChar(50) @default("") // 教授, 副教授, 讲师等

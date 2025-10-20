@@ -32,6 +32,7 @@ interface TeacherEditDialogProps {
   setEditingTeacher: React.Dispatch<React.SetStateAction<Partial<Teacher>>>;  // 修改为Partial<Teacher>
   departments: Department[];
   onEditTeacher: () => void;
+  isSubmitting?: boolean;
 }
 
 const TeacherEditDialog: React.FC<TeacherEditDialogProps> = ({
@@ -40,7 +41,8 @@ const TeacherEditDialog: React.FC<TeacherEditDialogProps> = ({
   editingTeacher,
   setEditingTeacher,
   departments,
-  onEditTeacher
+  onEditTeacher,
+  isSubmitting = false
 }) => {
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -125,10 +127,10 @@ const TeacherEditDialog: React.FC<TeacherEditDialogProps> = ({
                 <SelectValue placeholder="选择职称" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="教授">教授</SelectItem>
-                <SelectItem value="副教授">副教授</SelectItem>
-                <SelectItem value="讲师">讲师</SelectItem>
-                <SelectItem value="助教">助教</SelectItem>
+                <SelectItem key="教授" value="教授">教授</SelectItem>
+                <SelectItem key="副教授" value="副教授">副教授</SelectItem>
+                <SelectItem key="讲师" value="讲师">讲师</SelectItem>
+                <SelectItem key="助教" value="助教">助教</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -217,9 +219,9 @@ const TeacherEditDialog: React.FC<TeacherEditDialogProps> = ({
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="active">在职</SelectItem>
-                <SelectItem value="onLeave">休假</SelectItem>
-                <SelectItem value="resigned">离职</SelectItem>
+                <SelectItem key="active" value="active">在职</SelectItem>
+                <SelectItem key="onLeave" value="onLeave">休假</SelectItem>
+                <SelectItem key="resigned" value="resigned">离职</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -228,10 +230,13 @@ const TeacherEditDialog: React.FC<TeacherEditDialogProps> = ({
           <Button
             variant="ghost"
             onClick={() => onOpenChange(false)}
+            disabled={isSubmitting}
           >
             取消
           </Button>
-          <Button onClick={onEditTeacher}>保存</Button>
+          <Button onClick={onEditTeacher} disabled={isSubmitting}>
+            {isSubmitting ? '保存中...' : '保存'}
+          </Button>
         </DialogFooter>
       </DialogContent>
     </Dialog>

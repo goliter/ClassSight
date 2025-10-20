@@ -81,6 +81,15 @@ export async function deleteTeacher(teacherId: string) {
   });
 }
 
+//获取所有老师
+export async function getTeachers() {
+  return prisma.teacher.findMany({
+    include: {
+      courses: true
+    }
+  });
+}
+
 //根据老师id查询老师
 export async function getTeacherById(teacherId: string) {
   return prisma.teacher.findUnique({

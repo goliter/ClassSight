@@ -8,7 +8,6 @@ import RankBadge from './RankBadge';
 
 // 教师接口定义
 interface Teacher {
-  id: string;
   name: string;
   teacherId: string;
   departmentId: string;
@@ -67,7 +66,7 @@ const TeacherList: React.FC<TeacherListProps> = ({
               {teachers.length > 0 ? (
                 teachers.map((teacher) => (
                   <tr
-                    key={teacher.id}
+                    key={teacher.teacherId}
                     className="border-b border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-800/50"
                   >
                     <td className="py-4 font-medium">{teacher.name}</td>
@@ -99,7 +98,13 @@ const TeacherList: React.FC<TeacherListProps> = ({
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <AlertDialog open={isDeleteDialogOpen && selectedTeacher?.id === teacher.id} onOpenChange={onSetDeleteDialogOpen}>
+                        <AlertDialog open={isDeleteDialogOpen && selectedTeacher?.teacherId === teacher.teacherId} onOpenChange={(open) => {
+                          if (open) {
+                            onOpenDeleteDialog(teacher);
+                          } else {
+                            onSetDeleteDialogOpen(false);
+                          }
+                        }}>
                           <AlertDialogTrigger asChild>
                             <Button
                               variant="ghost"

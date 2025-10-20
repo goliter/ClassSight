@@ -90,7 +90,13 @@ const DepartmentList: React.FC<DepartmentListProps> = ({
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <AlertDialog open={isDeleteDialogOpen && selectedDepartment?.id === dept.id} onOpenChange={onSetDeleteDialogOpen}>
+                        <AlertDialog open={isDeleteDialogOpen && selectedDepartment?.id === dept.id} onOpenChange={(open) => {
+                          if (open) {
+                            onOpenDeleteDialog(dept);
+                          } else {
+                            onSetDeleteDialogOpen(false);
+                          }
+                        }}>
                           <AlertDialogTrigger asChild>
                             <Button
                               variant="ghost"
