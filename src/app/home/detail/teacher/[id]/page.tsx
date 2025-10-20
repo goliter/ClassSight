@@ -33,9 +33,7 @@ interface Teacher {
   office: string | null;
   hireDate: Date;
   status: "active" | "onLeave" | "resigned";
-  department?: {
-    name: string;
-  } | null;
+  department: string;
   courses?: CourseFromDb[];
 }
 
@@ -132,16 +130,16 @@ const TeacherDetailPage: React.FC<TeacherDetailPageProps> = ({ params }) => {
         if (teacherDataResult) {
           // 格式化教师数据以匹配页面需要的结构
           setTeacherData({
-            teacherId: teacherDataResult.teacherId,
-            name: teacherDataResult.name,
-            departmentId: teacherDataResult.departmentId,
-            rank: teacherDataResult.rank,
-            email: teacherDataResult.email,
-            phone: teacherDataResult.phone,
-            office: teacherDataResult.office,
-            hireDate: teacherDataResult.hireDate ? new Date(teacherDataResult.hireDate) : new Date(),
-            status: (teacherDataResult.status as "active" | "onLeave" | "resigned") || "active",
-            department: teacherDataResult.department,
+            teacherId: teacherDataResult.data.teacherId || teacherId,
+            name: teacherDataResult.data.name || "未命名教师",
+            departmentId: teacherDataResult.data.departmentId || "",
+            rank: teacherDataResult.data.rank || "",
+            email: teacherDataResult.data.email || "",
+            phone: teacherDataResult.data.phone || "",
+            office: teacherDataResult.data.office || "",
+            hireDate: teacherDataResult.data.hireDate ? new Date(teacherDataResult.data.hireDate) : new Date(),
+            status: (teacherDataResult.data.status as "active" | "onLeave" | "resigned") || "active",
+            department: teacherDataResult.data.departmentName || "",
             courses: coursesDataResult
           });
 
@@ -149,12 +147,12 @@ const TeacherDetailPage: React.FC<TeacherDetailPageProps> = ({ params }) => {
           const formattedCourses: Course[] = [];
           if (coursesDataResult && coursesDataResult.length > 0) {
             formattedCourses.push(...coursesDataResult.map((course: any) => ({
-              id: course.id || `course-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-              name: course.name || "未命名课程",
+              id: course.data.id || `course-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              name: course.data.name || "未命名课程",
               teacher: teacherDataResult.name,
-              department: teacherDataResult.department?.name || course.departmentName || "",
-              type: course.type || "专业课程",
-              schedule: formatSchedule(course.schedule),
+              department: teacherDataResult.department?.name || course.data.departmentName || "",
+              type: course.data.type || "专业课程",
+              schedule: formatSchedule(course.data.schedule),
               bgColor: getRandomColor(),
             })));
           }
@@ -345,7 +343,7 @@ const TeacherDetailPage: React.FC<TeacherDetailPageProps> = ({ params }) => {
                 </div>
                 <div className="col-span-2 font-medium flex items-center">
                   <Building2 className="h-4 w-4 mr-2 text-purple-500" />
-                  {teacherData.department?.name || "暂无"}
+                  {teacherData.department || "暂无"}
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4 pb-4 border-b border-gray-100 dark:border-gray-700">

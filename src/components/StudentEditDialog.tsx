@@ -6,7 +6,6 @@ import { Button } from './ui/button';
 
 // 定义Student接口
 interface Student {
-  id: string;
   name: string;
   studentId: string;
   departmentId: string;

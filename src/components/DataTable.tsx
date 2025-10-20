@@ -106,37 +106,17 @@ const DataTable: React.FC<DataTableProps<any>> = ({
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
-                        <AlertDialog
-                          open={deleteDialogOpen && selectedItem?.id === item.id}
-                          onOpenChange={setDeleteDialogOpen}
+                        <Button
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            // 直接设置selectedItem并打开删除对话框
+                            onDelete(item);
+                          }}
+                          className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                         >
-                          <AlertDialogTrigger asChild>
-                            <Button
-                              variant="ghost"
-                              size="sm"
-                              className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
-                            >
-                              <Trash2 className="h-4 w-4" />
-                            </Button>
-                          </AlertDialogTrigger>
-                          <AlertDialogContent>
-                            <AlertDialogHeader>
-                              <AlertDialogTitle>确认删除</AlertDialogTitle>
-                              <AlertDialogDescription>
-                                您确定要删除「{item.name || item.title || item.id}」吗？此操作无法撤销。
-                              </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                              <AlertDialogCancel>取消</AlertDialogCancel>
-                              <AlertDialogAction
-                                onClick={() => onDelete(item)}
-                                className="bg-red-600 hover:bg-red-700"
-                              >
-                                删除
-                              </AlertDialogAction>
-                            </AlertDialogFooter>
-                          </AlertDialogContent>
-                        </AlertDialog>
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </div>
                     </td>
                   </tr>

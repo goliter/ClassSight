@@ -37,7 +37,7 @@ model Student {
   major          String        @db.VarChar(100) @default("") // 将major改为字符串类型
   grade          String        @db.VarChar(20) @default("")
   class          String        @db.VarChar(50) @default("")
-  email          String        @unique @db.VarChar(100) @default("student@example.com")
+  email          String        @db.VarChar(100) @default("student@example.com")
   phone          String?       @db.VarChar(20)
   enrollmentDate DateTime      @default(now())
   status         String        @db.VarChar(20) @default("active") // active, suspended, graduated

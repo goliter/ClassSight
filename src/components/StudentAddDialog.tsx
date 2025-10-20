@@ -18,6 +18,7 @@ interface Student {
   phone: string;
   enrollmentDate: string;
   status: 'active' | 'suspended' | 'graduated';
+  password?: string;
 }
 
 // 定义Department接口
@@ -179,6 +180,21 @@ const StudentAddDialog: React.FC<StudentAddDialogProps> = ({
               value={newStudent.phone || ""}
               onChange={(e) =>
                 setNewStudent({ ...newStudent, phone: e.target.value })
+              }
+              className="col-span-3"
+            />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <label htmlFor="studentPassword" className="text-right font-medium">
+              密码
+            </label>
+            <Input
+              id="studentPassword"
+              type="password"
+              placeholder="请输入密码"
+              value={newStudent.password || ""}
+              onChange={(e) =>
+                setNewStudent({ ...newStudent, password: e.target.value })
               }
               className="col-span-3"
             />

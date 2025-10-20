@@ -11,6 +11,15 @@ export  async function createStudent(student: any) {
   });
 }
 
+//获取所有学生
+export async function getStudents() {
+  return prisma.student.findMany({
+    include: {
+      department: true,
+    }
+  });
+}
+
 //删除学生
 export async function deleteStudent(studentId: string) {
   return prisma.student.delete({
