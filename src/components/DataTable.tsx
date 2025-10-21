@@ -109,10 +109,7 @@ const DataTable: React.FC<DataTableProps<any>> = ({
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => {
-                            // 直接设置selectedItem并打开删除对话框
-                            onDelete(item);
-                          }}
+                          onClick={() => handleDelete(item)}
                           className="text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20"
                         >
                           <Trash2 className="h-4 w-4" />
@@ -135,6 +132,31 @@ const DataTable: React.FC<DataTableProps<any>> = ({
           </table>
         </div>
       </CardContent>
+      
+      {/* 删除确认弹窗 */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>确认删除</AlertDialogTitle>
+            <AlertDialogDescription>
+              您确定要删除此记录吗？此操作不可撤销，删除后相关数据将丢失。
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setSelectedItem(null)}>取消</AlertDialogCancel>
+            <AlertDialogAction 
+              className="bg-red-600 hover:bg-red-700" 
+              onClick={() => {
+                if (selectedItem) {
+                  onDelete(selectedItem);
+                }
+              }}
+            >
+              确认删除
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   );
 };

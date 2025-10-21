@@ -1,16 +1,10 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 "use client";
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PageHeader from '@/components/PageHeader';
 import PageFooter from '@/components/PageFooter';
 import StudentNavigation from '@/components/StudentNavigation';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Search, Plus, Edit, Trash2, ChevronLeft, ChevronRight } from 'lucide-react';
 import { toast } from "sonner";
 import { Badge } from '@/components/ui/badge';
 import CourseAddDialog from "@/components/CourseAddDialog";
@@ -34,9 +28,9 @@ interface Course {
   description: string;
 }
 
-// 教师接口定义
+// 教师接口定义 - 与数据库模型保持一致，主键为teacherId
 interface Teacher {
-  id: string;
+  teacherId: string;
   name: string;
 }
 
@@ -47,78 +41,11 @@ interface Department {
 }
 
 const CourseManagementPage: React.FC = () => {
-  // 模拟课程数据
-  const [courses, setCourses] = useState<Course[]>([
-    {
-      id: '1',
-      name: 'Web前端开发',
-      code: 'CS1001',
-      teacherId: 'T10001',
-      teacherName: '张教授',
-      departmentId: '1',
-      departmentName: '信息科学与技术学院',
-      credits: 3,
-      studentCount: 35,
-      status: 'active',
-      description: '学习Web前端开发技术，包括HTML、CSS、JavaScript等'
-    },
-    {
-      id: '2',
-      name: '数据结构与算法',
-      code: 'CS1002',
-      teacherId: 'T10002',
-      teacherName: '李教授',
-      departmentId: '1',
-      departmentName: '信息科学与技术学院',
-      credits: 4,
-      studentCount: 42,
-      status: 'active',
-      description: '学习数据结构的基本概念和常用算法'
-    },
-    {
-      id: '3',
-      name: '人工智能导论',
-      code: 'AI1001',
-      teacherId: 'T10003',
-      teacherName: '王教授',
-      departmentId: '2',
-      departmentName: '人工智能学院',
-      credits: 3,
-      studentCount: 50,
-      status: 'pending',
-      description: '介绍人工智能的基本概念和应用领域'
-    },
-    {
-      id: '4',
-      name: '高等数学',
-      code: 'MATH1001',
-      teacherId: 'T10004',
-      teacherName: '赵教授',
-      departmentId: '3',
-      departmentName: '数学与统计学院',
-      credits: 5,
-      studentCount: 120,
-      status: 'active',
-      description: '高等数学的基本理论和应用'
-    },
-  ]);
-
-  // 模拟教师数据
-  const [teachers] = useState<Teacher[]>([
-    { id: 'T10001', name: '张教授' },
-    { id: 'T10002', name: '李教授' },
-    { id: 'T10003', name: '王教授' },
-    { id: 'T10004', name: '赵教授' },
-  ]);
-
-  // 模拟部门数据
-  const [departments] = useState<Department[]>([
-    { id: '1', name: '信息科学与技术学院' },
-    { id: '2', name: '人工智能学院' },
-    { id: '3', name: '数学与统计学院' },
-  ]);
-
   // 状态管理
+  const [courses, setCourses] = useState<Course[]>([]);
+  const [teachers, setTeachers] = useState<Teacher[]>([]);
+  const [departments, setDepartments] = useState<Department[]>([]);
+  const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [currentPage, setCurrentPage] = useState(1);
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
@@ -137,6 +64,86 @@ const CourseManagementPage: React.FC = () => {
   const [editingCourse, setEditingCourse] = useState<Partial<Course>>({});
   const itemsPerPage = 10;
 
+  // 从API获取所有课程
+  const fetchCourses = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch('/api/course');
+      const data = await response.json();
+      
+      if (response.ok) {
+        // 确保每个课程对象都包含必需的字段，并从嵌套对象中提取teacherName和departmentName
+        const coursesWithDefaults = data.data.map((course: any) => ({
+          ...course,
+          // 从嵌套的teacher对象中提取teacherName
+          teacherName: course.teacher?.name || '',
+          // 从嵌套的department对象中提取departmentName或使用teacher.departmentName
+          departmentName: course.department?.name || course.teacher?.departmentName || '',
+          studentCount: course.studentCount || 0
+        }));
+        setCourses(coursesWithDefaults);
+      } else {
+        toast.error(data.error || '获取课程列表失败');
+      }
+    } catch (error) {
+      console.error('获取课程列表错误:', error);
+      toast.error('网络错误，请稍后重试');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // 从API获取所有教师
+  const fetchTeachers = async () => {
+    try {
+      const response = await fetch('/api/teacher');
+      const data = await response.json();
+      
+      if (response.ok && Array.isArray(data.data)) {
+        setTeachers(data.data);
+      } else {
+        toast.error(data.error || '获取教师列表失败');
+        // 确保teachers是数组，即使API返回错误
+        setTeachers([]);
+      }
+    } catch (error) {
+      console.error('获取教师列表错误:', error);
+      toast.error('网络错误，请稍后重试');
+      // 确保teachers是数组，即使发生异常
+      setTeachers([]);
+    }
+  };
+
+  // 从API获取所有部门
+  const fetchDepartments = async () => {
+    try {
+      const response = await fetch('/api/department');
+      const data = await response.json();
+      
+      if (response.ok && Array.isArray(data.data)) {
+        setDepartments(data.data);
+      } else {
+        toast.error(data.error || '获取部门列表失败');
+        // 确保departments是数组，即使API返回错误
+        setDepartments([]);
+      }
+    } catch (error) {
+      console.error('获取部门列表错误:', error);
+      toast.error('网络错误，请稍后重试');
+      // 确保departments是数组，即使发生异常
+      setDepartments([]);
+    }
+  };
+
+  // 初始化时获取数据
+  useEffect(() => {
+    const loadData = async () => {
+      await Promise.all([fetchCourses(), fetchTeachers(), fetchDepartments()]);
+    };
+    
+    loadData();
+  }, []);
+
   // 处理搜索
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
@@ -144,12 +151,18 @@ const CourseManagementPage: React.FC = () => {
   };
 
   // 过滤数据
-  const filteredCourses = courses.filter(course => 
-    course.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.code.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.teacherName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    course.departmentName.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredCourses = courses.filter(course => {
+    // 提前转换搜索词为小写，避免重复转换
+    const lowerSearchTerm = searchTerm.toLowerCase();
+    
+    // 检查每个字段是否存在且为字符串类型，然后进行搜索
+    return (
+      (typeof course.name === 'string' && course.name.toLowerCase().includes(lowerSearchTerm)) ||
+      (typeof course.code === 'string' && course.code.toLowerCase().includes(lowerSearchTerm)) ||
+      (typeof course.teacherName === 'string' && course.teacherName.toLowerCase().includes(lowerSearchTerm)) ||
+      (typeof course.departmentName === 'string' && course.departmentName.toLowerCase().includes(lowerSearchTerm))
+    );
+  });
 
   // 分页
   const totalPages = Math.ceil(filteredCourses.length / itemsPerPage);
@@ -159,94 +172,144 @@ const CourseManagementPage: React.FC = () => {
   );
 
   // 处理添加课程
-  const handleAddCourse = () => {
+  const handleAddCourse = async () => {
     if (!newCourse.name || !newCourse.code || !newCourse.teacherId || !newCourse.departmentId) {
       toast.error('请填写课程名称、代码、教师和部门');
       return;
     }
 
-    const teacher = teachers.find(t => t.id === newCourse.teacherId);
-    const department = departments.find(d => d.id === newCourse.departmentId);
+    // 使用字符串比较确保类型一致性，根据Teacher接口定义使用teacherId字段
+    const teacher = teachers.find(t => String(t.teacherId) === String(newCourse.teacherId));
+    const department = departments.find(d => String(d.id) === String(newCourse.departmentId));
 
     if (!teacher || !department) {
       toast.error('请选择有效的教师和部门');
       return;
     }
 
-    const course: Course = {
-      id: (courses.length + 1).toString(),
-      name: newCourse.name || '',
-      code: newCourse.code || '',
-      teacherId: newCourse.teacherId || '',
-      teacherName: teacher.name,
-      departmentId: newCourse.departmentId || '',
-      departmentName: department.name,
-      credits: newCourse.credits || 3,
-      studentCount: 0,
-      status: newCourse.status as 'active' | 'inactive' | 'pending' || 'pending',
-      description: newCourse.description || ''
-    };
+    try {
+      const response = await fetch('/api/course', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: newCourse.name,
+          code: newCourse.code,
+          credits: newCourse.credits,
+          status: newCourse.status,
+          description: newCourse.description,
+          // 直接使用外键ID字段，符合Prisma schema定义
+          teacherId: newCourse.teacherId,
+          departmentId: newCourse.departmentId
+        }),
+      });
 
-    setCourses([...courses, course]);
-    setIsAddDialogOpen(false);
-    setNewCourse({
-      name: '',
-      code: '',
-      teacherId: '',
-      departmentId: '',
-      credits: 3,
-      status: 'active',
-      description: ''
-    });
-    toast.success('课程创建成功');
+      const data = await response.json();
+      
+      if (response.ok) {
+        setIsAddDialogOpen(false);
+        setNewCourse({
+          name: '',
+          code: '',
+          teacherId: '',
+          departmentId: '',
+          credits: 3,
+          status: 'active',
+          description: ''
+        });
+        toast.success('课程创建成功');
+        // 重新获取课程列表
+        await fetchCourses();
+      } else {
+        toast.error(data.error || '创建课程失败');
+      }
+    } catch (error) {
+      console.error('添加课程错误:', error);
+      toast.error('网络错误，请稍后重试');
+    }
   };
 
   // 处理编辑课程
-  const handleEditCourse = () => {
+  const handleEditCourse = async () => {
     if (!selectedCourse || !editingCourse.name || !editingCourse.code || !editingCourse.teacherId || !editingCourse.departmentId) {
       toast.error('请填写课程名称、代码、教师和部门');
       return;
     }
 
-    const teacher = teachers.find(t => t.id === editingCourse.teacherId);
-    const department = departments.find(d => d.id === editingCourse.departmentId);
+    // 使用字符串比较确保类型一致性，根据Teacher接口定义使用teacherId字段
+    const teacher = teachers.find(t => String(t.teacherId) === String(editingCourse.teacherId));
+    const department = departments.find(d => String(d.id) === String(editingCourse.departmentId));
 
     if (!teacher || !department) {
       toast.error('请选择有效的教师和部门');
       return;
     }
 
-    setCourses(courses.map(course => 
-      course.id === selectedCourse.id
-        ? {
-            ...course,
-            name: editingCourse.name || course.name,
-            code: editingCourse.code || course.code,
-            teacherId: editingCourse.teacherId || course.teacherId,
-            teacherName: teacher.name,
-            departmentId: editingCourse.departmentId || course.departmentId,
-            departmentName: department.name,
-            credits: editingCourse.credits || course.credits,
-            status: editingCourse.status as 'active' | 'inactive' | 'pending' || course.status,
-            description: editingCourse.description || course.description
-          }
-        : course
-    ));
+    try {
+      const response = await fetch(`/api/course/${selectedCourse.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          name: editingCourse.name,
+          code: editingCourse.code,
+          credits: editingCourse.credits,
+          status: editingCourse.status,
+          description: editingCourse.description,
+          // 直接使用外键ID字段，符合Prisma schema定义
+          teacherId: editingCourse.teacherId,
+          departmentId: editingCourse.departmentId
+        }),
+      });
 
-    setIsEditDialogOpen(false);
-    setSelectedCourse(null);
-    setEditingCourse({});
-    toast.success('课程信息已更新');
+      const data = await response.json();
+      
+      if (response.ok) {
+        setIsEditDialogOpen(false);
+        setSelectedCourse(null);
+        setEditingCourse({});
+        toast.success('课程信息已更新');
+        // 重新获取课程列表
+        await fetchCourses();
+      } else {
+        toast.error(data.error || '更新课程信息失败');
+      }
+    } catch (error) {
+      console.error('编辑课程错误:', error);
+      toast.error('网络错误，请稍后重试');
+    }
   };
 
   // 处理删除课程
-  const handleDeleteCourse = () => {
-    if (!selectedCourse) return;
+  const handleDeleteCourse = async (course: Course) => {
+    try {
+      const response = await fetch(`/api/course/${course.id}`, {
+        method: 'DELETE',
+      });
 
-    setCourses(courses.filter(course => course.id !== selectedCourse.id));
-    setIsDeleteDialogOpen(false);
-    setSelectedCourse(null);
-    toast.success('课程已删除');
+      const data = await response.json();
+      
+      if (response.ok) {
+        setIsDeleteDialogOpen(false);
+        setSelectedCourse(null);
+        toast.success('课程已删除');
+        // 重新获取课程列表
+        await fetchCourses();
+      } else {
+        toast.error(data.error || '删除课程失败');
+        // 删除失败时也关闭对话框
+        setIsDeleteDialogOpen(false);
+        setSelectedCourse(null);
+      }
+    } catch (error) {
+      console.error('删除课程错误:', error);
+      toast.error('网络错误，请稍后重试');
+      // 出错时也关闭对话框
+      setIsDeleteDialogOpen(false);
+      setSelectedCourse(null);
+    }
   };
 
   // 打开编辑对话框
@@ -317,48 +380,64 @@ const CourseManagementPage: React.FC = () => {
           addButtonText="添加课程"
         />
 
-        {/* 使用数据表格组件 */}
-        <DataTable
-          title="课程列表"
-          data={paginatedCourses}
-          columns={[
-            { 
-              header: '课程名称', 
-              accessor: (course: Course) => (   
-                <>
-                  <div className="font-medium">{course.name}</div>
-                  <div className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
-                    {course.description}
-                  </div>
-                </>
-              )
-            },
-            { header: '课程代码', accessor: 'code' },
-            { header: '授课教师', accessor: 'teacherName' },
-            { header: '所属学院', accessor: 'departmentName' },
-            { header: '学分', accessor: 'credits' },
-            { 
-              header: '学生人数', 
-              accessor: (course: Course) => (
-                <Badge
-                  variant="outline"
-                  className="bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
-                >
-                  {course.studentCount}
-                </Badge>
-              )
-            },
-            { header: '状态', accessor: 'status' }
-          ]}
-          onEdit={openEditDialog}
-          onDelete={handleDeleteCourse}
-          deleteDialogOpen={isDeleteDialogOpen}
-          setDeleteDialogOpen={setIsDeleteDialogOpen}
-          selectedItem={selectedCourse}
-          setSelectedItem={setSelectedCourse}
-          emptyStateText="没有找到符合条件的课程"
-          getStatusBadge={getStatusBadge}
-        />
+        {/* 加载状态 */}
+        {loading ? (
+          <div className="flex justify-center items-center py-20">
+            <div className="text-lg text-gray-500">加载中...</div>
+          </div>
+        ) : (
+          <>
+            {/* 使用数据表格组件 */}
+            <DataTable
+              title="课程列表"
+              data={paginatedCourses}
+              columns={[
+                { 
+                  header: '课程名称', 
+                  accessor: (course: Course) => (   
+                    <>
+                      <div className="font-medium">{course.name}</div>
+                      <div className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">
+                        {course.description}
+                      </div>
+                    </>
+                  )
+                },
+                { header: '课程代码', accessor: 'code' },
+                { header: '授课教师', accessor: 'teacherName' },
+                { header: '所属学院', accessor: 'departmentName' },
+                { header: '学分', accessor: 'credits' },
+                { 
+                  header: '学生人数', 
+                  accessor: (course: Course) => (
+                    <Badge
+                      variant="outline"
+                      className="bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400"
+                    >
+                      {course.studentCount}
+                    </Badge>
+                  )
+                },
+                { header: '状态', accessor: 'status' }
+              ]}
+              onEdit={openEditDialog}
+              onDelete={handleDeleteCourse}
+              deleteDialogOpen={isDeleteDialogOpen}
+              setDeleteDialogOpen={setIsDeleteDialogOpen}
+              selectedItem={selectedCourse}
+              setSelectedItem={setSelectedCourse}
+              emptyStateText="没有找到符合条件的课程"
+              getStatusBadge={getStatusBadge}
+            />
+            
+            {/* 空状态 */}
+            {filteredCourses.length === 0 && (
+              <div className="text-center py-16 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                <p className="text-gray-500 dark:text-gray-400">暂无课程数据</p>
+              </div>
+            )}
+          </>
+        )}
 
         {/* 使用分页控件组件 */}
         <Pagination

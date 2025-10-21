@@ -178,6 +178,26 @@ export async function getCourseById(id: string) {
   });
 }
 
+//获取所有课程
+export async function getAllCourses() {
+  return prisma.course.findMany({
+    include: {
+      teacher: true
+    }
+  });
+}
+
+//更改课程信息
+export async function updateCourse(id: string, data: any) {
+  return prisma.course.update({
+    where: {
+      id,
+    },
+    data: data,
+  });
+}
+
+
 //根据课程id查询课程的学生信息
 export async function getCourseStudents(id: string) {
   return prisma.courseEnrollment.findMany({

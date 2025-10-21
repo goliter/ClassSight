@@ -403,8 +403,29 @@ const StudentManagementPage: React.FC = () => {
   // 加载状态显示
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[oklch(0.145_0_0)] text-gray-900 dark:text-white flex items-center justify-center">
-        <div className="text-xl font-medium">加载中...</div>
+      <div className="bg-gray-50 dark:bg-[oklch(0.145_0_0)] text-gray-900 dark:text-white">
+        {/* 顶部导航 */}
+        <PageHeader title="ClassSight 管理系统" welcomeText="欢迎，管理员" />
+
+        {/* 导航菜单 */}
+        <StudentNavigation role={2} />
+
+        {/* 主要内容区域 */}
+        <main className="container mx-auto px-4 py-8">
+          <div className="bg-white dark:bg-[oklch(0.205_0_0)] rounded-xl shadow-md p-6 mb-6">
+            <h1 className="text-2xl font-bold mb-2">学生管理</h1>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
+              管理所有学生信息、学籍状态和选课情况
+            </p>
+          </div>
+          
+          <div className="bg-white dark:bg-[oklch(0.205_0_0)] rounded-xl shadow-md p-6 min-h-[300px] flex items-center justify-center">
+            <div className="text-xl font-medium">加载中...</div>
+          </div>
+        </main>
+        
+        {/* 页脚 */}
+        <PageFooter />
       </div>
     );
   }
@@ -412,17 +433,38 @@ const StudentManagementPage: React.FC = () => {
   // 错误状态显示
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 dark:bg-[oklch(0.145_0_0)] text-gray-900 dark:text-white flex flex-col items-center justify-center p-4">
-        <div className="text-red-500 text-xl font-medium mb-4">{error}</div>
-        <button 
-          onClick={() => {
-            setError(null);
-            Promise.all([fetchStudents(), fetchDepartments()]);
-          }}
-          className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-        >
-          重新加载
-        </button>
+      <div className="bg-gray-50 dark:bg-[oklch(0.145_0_0)] text-gray-900 dark:text-white">
+        {/* 顶部导航 */}
+        <PageHeader title="ClassSight 管理系统" welcomeText="欢迎，管理员" />
+
+        {/* 导航菜单 */}
+        <StudentNavigation role={2} />
+
+        {/* 主要内容区域 */}
+        <main className="container mx-auto px-4 py-8">
+          <div className="bg-white dark:bg-[oklch(0.205_0_0)] rounded-xl shadow-md p-6 mb-6">
+            <h1 className="text-2xl font-bold mb-2">学生管理</h1>
+            <p className="text-gray-500 dark:text-gray-400 mb-6">
+              管理所有学生信息、学籍状态和选课情况
+            </p>
+          </div>
+          
+          <div className="bg-white dark:bg-[oklch(0.205_0_0)] rounded-xl shadow-md p-6 min-h-[300px] flex flex-col items-center justify-center">
+            <div className="text-red-500 text-xl font-medium mb-4">{error}</div>
+            <button 
+              onClick={() => {
+                setError(null);
+                Promise.all([fetchStudents(), fetchDepartments()]);
+              }}
+              className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
+            >
+              重新加载
+            </button>
+          </div>
+        </main>
+        
+        {/* 页脚 */}
+        <PageFooter />
       </div>
     );
   }

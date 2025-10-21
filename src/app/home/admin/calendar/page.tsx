@@ -101,7 +101,7 @@ const StudentCalendarPage: React.FC = () => {
 
       {/* 主要内容区域 - 水平布局 */}
       <main className="container mx-auto px-4 py-8">
-        <h2 className="text-2xl font-bold mb-6">学院日历</h2>
+        <h2 className="text-2xl font-bold mb-6">日历</h2>
 
         {/* 水平布局容器 */}
         <div className="flex flex-col lg:flex-row gap-6">
