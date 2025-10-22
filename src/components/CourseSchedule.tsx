@@ -2,10 +2,22 @@ import React from "react";
 import { Calendar, Clock } from "lucide-react";
 
 interface ScheduleItem {
-  day: string;
+  date: string; // 从day改为date
   time: string;
   location: string;
 }
+
+// 日期格式化函数
+const formatDate = (dateString: string) => {
+  const date = new Date(dateString);
+  const options: Intl.DateTimeFormatOptions = {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+    weekday: 'long'
+  };
+  return date.toLocaleDateString('zh-CN', options);
+};
 
 interface CourseScheduleProps {
   schedule: ScheduleItem[];
@@ -24,7 +36,7 @@ const CourseSchedule: React.FC<CourseScheduleProps> = ({ schedule }) => {
             </div>
             <div className="flex-grow">
               <div className="flex justify-between items-center mb-1">
-                <span className="font-medium">{item.day}</span>
+                <span className="font-medium">{formatDate(item.date)}</span>
                 <span className="text-gray-500 dark:text-gray-400 text-sm">{item.location}</span>
               </div>
               <div className="flex items-center space-x-2 text-gray-700 dark:text-gray-300">

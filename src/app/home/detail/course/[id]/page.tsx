@@ -36,7 +36,7 @@ interface CourseFromDb {
   status: 'active' | 'inactive' | 'pending';
   studentCount: number;
   schedule: Array<{
-    day: string;
+    date: string;
     time: string;
     location: string;
   }>;
@@ -323,7 +323,7 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({ params }) => {
                     {courseData.schedule.map((item, index) => (
                       <div key={index} className="flex items-center p-4 bg-gray-50 dark:bg-gray-700/50 rounded-lg">
                         <div className="bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full w-10 h-10 flex items-center justify-center font-semibold mr-4">
-                          {item.day}
+                          {item.date}
                         </div>
                         <div className="flex-1">
                           <div className="font-medium">

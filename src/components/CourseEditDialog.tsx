@@ -4,6 +4,8 @@ import { Input } from './ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from './ui/select';
 import { Button } from './ui/button';
 import { Textarea } from './ui/textarea';
+import ScheduleEditor from './ScheduleEditor';
+import { ScheduleItem } from './ScheduleEditor';
 
 // 定义接口
 interface Course {
@@ -18,6 +20,7 @@ interface Course {
   description: string;
   status: 'active' | 'inactive' | 'pending';
   studentCount?: number;
+  schedule?: ScheduleItem[];
 }
 
 interface Teacher {
@@ -99,6 +102,11 @@ const CourseEditDialog: React.FC<CourseEditDialogProps> = ({
     }
   };
 
+  // 处理课程安排变化
+  const handleScheduleChange = (schedule: ScheduleItem[]) => {
+    setEditingCourse(prev => ({ ...prev, schedule }));
+  };
+
   // 确保有选中的课程
   if (!selectedCourse) {
     return (
@@ -122,46 +130,44 @@ const CourseEditDialog: React.FC<CourseEditDialogProps> = ({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-auto">
         <DialogHeader>
           <DialogTitle>编辑课程</DialogTitle>
         </DialogHeader>
         
-        <div className="grid gap-4 py-4">
+        <div className="space-y-6 py-4">
           {/* 课程名称 */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <label htmlFor="editCourseName" className="text-right font-medium">
-              课程名称
+          <div className="space-y-2">
+            <label htmlFor="editCourseName" className="block font-medium">
+              课程名称 *
             </label>
             <Input
               id="editCourseName"
               placeholder="请输入课程名称"
               value={editingCourse.name || ''}
               onChange={(e) => setEditingCourse(prev => ({ ...prev, name: e.target.value }))}
-              className="col-span-3"
               required
             />
           </div>
           
           {/* 课程代码 */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <label htmlFor="editCourseCode" className="text-right font-medium">
-              课程代码
+          <div className="space-y-2">
+            <label htmlFor="editCourseCode" className="block font-medium">
+              课程代码 *
             </label>
             <Input
               id="editCourseCode"
               placeholder="请输入课程代码"
               value={editingCourse.code || ''}
               onChange={(e) => setEditingCourse(prev => ({ ...prev, code: e.target.value }))}
-              className="col-span-3"
               required
             />
           </div>
           
           {/* 授课教师 */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <label htmlFor="editCourseTeacher" className="text-right font-medium">
-              授课教师
+          <div className="space-y-2">
+            <label htmlFor="editCourseTeacher" className="block font-medium">
+              授课教师 *
             </label>
             <Select
               value={String(editingCourse.teacherId || '')}
@@ -176,7 +182,7 @@ const CourseEditDialog: React.FC<CourseEditDialogProps> = ({
                 }
               }}
             >
-              <SelectTrigger id="editCourseTeacher" className="col-span-3">
+              <SelectTrigger id="editCourseTeacher">
                 <SelectValue placeholder="选择教师" />
               </SelectTrigger>
               <SelectContent>
@@ -202,9 +208,9 @@ const CourseEditDialog: React.FC<CourseEditDialogProps> = ({
           </div>
           
           {/* 所属学院 */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <label htmlFor="editCourseDepartment" className="text-right font-medium">
-              所属学院
+          <div className="space-y-2">
+            <label htmlFor="editCourseDepartment" className="block font-medium">
+              所属学院 *
             </label>
             <Select
               value={String(editingCourse.departmentId || '')}
@@ -219,7 +225,7 @@ const CourseEditDialog: React.FC<CourseEditDialogProps> = ({
                 }
               }}
             >
-              <SelectTrigger id="editCourseDepartment" className="col-span-3">
+              <SelectTrigger id="editCourseDepartment">
                 <SelectValue placeholder="选择学院" />
               </SelectTrigger>
               <SelectContent>
@@ -245,9 +251,9 @@ const CourseEditDialog: React.FC<CourseEditDialogProps> = ({
           </div>
           
           {/* 学分 */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <label htmlFor="editCourseCredits" className="text-right font-medium">
-              学分
+          <div className="space-y-2">
+            <label htmlFor="editCourseCredits" className="block font-medium">
+              学分 *
             </label>
             <Input
               id="editCourseCredits"
@@ -256,14 +262,13 @@ const CourseEditDialog: React.FC<CourseEditDialogProps> = ({
               max="10"
               value={editingCourse.credits || 3}
               onChange={handleCreditsChange}
-              className="col-span-3"
               required
             />
           </div>
           
           {/* 课程状态 */}
-          <div className="grid grid-cols-4 items-center gap-4">
-            <label htmlFor="editCourseStatus" className="text-right font-medium">
+          <div className="space-y-2">
+            <label htmlFor="editCourseStatus" className="block font-medium">
               状态
             </label>
             <Select
@@ -273,7 +278,7 @@ const CourseEditDialog: React.FC<CourseEditDialogProps> = ({
                 status: value as "active" | "inactive" | "pending"
               }))}
             >
-              <SelectTrigger id="editCourseStatus" className="col-span-3">
+              <SelectTrigger id="editCourseStatus">
                 <SelectValue placeholder="选择状态" />
               </SelectTrigger>
               <SelectContent>
@@ -283,20 +288,32 @@ const CourseEditDialog: React.FC<CourseEditDialogProps> = ({
               </SelectContent>
             </Select>
           </div>
-            <div className="grid grid-cols-4 items-start gap-4">
-              <label htmlFor="editCourseDescription" className="text-right font-medium mt-2">
-                课程描述
-              </label>
-              <textarea
-                id="editCourseDescription"
-                placeholder="请输入课程描述"
-                value={editingCourse.description || ''}
-                onChange={(e) => setEditingCourse(prev => ({ ...prev, description: e.target.value }))}
-                className="col-span-3 min-h-[100px] p-2 border rounded"
-                rows={4}
-              />
-            </div>
+          
+          {/* 课程描述 */}
+          <div className="space-y-2">
+            <label
+              htmlFor="editCourseDescription"
+              className="block font-medium"
+            >
+              课程描述
+            </label>
+            <Textarea
+              id="editCourseDescription"
+              placeholder="请输入课程描述"
+              value={editingCourse.description || ''}
+              onChange={(e) => setEditingCourse(prev => ({ ...prev, description: e.target.value }))}
+              className="min-h-[100px]"
+            />
           </div>
+          
+          {/* 课程安排 */}
+          <div className="space-y-4">
+            <ScheduleEditor 
+              initialSchedule={editingCourse.schedule || []}
+              onScheduleChange={handleScheduleChange}
+            />
+          </div>
+        </div>
         {/* 对话框底部按钮 */}
         <DialogFooter>
           <div className="flex space-x-2 w-full justify-end">

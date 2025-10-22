@@ -13,6 +13,13 @@ import SearchBar from '@/components/SearchBar';
 import DataTable from '@/components/DataTable';
 import Pagination from '@/components/Pagination';
 
+// 课程安排项接口
+interface ScheduleItem {
+  date: string;
+  time: string;
+  location: string;
+}
+
 // 课程接口定义
 interface Course {
   id: string;
@@ -26,6 +33,7 @@ interface Course {
   studentCount: number;
   status: 'active' | 'inactive' | 'pending';
   description: string;
+  schedule?: ScheduleItem[];
 }
 
 // 教师接口定义 - 与数据库模型保持一致，主键为teacherId
@@ -59,7 +67,8 @@ const CourseManagementPage: React.FC = () => {
     departmentId: '',
     credits: 3,
     status: 'active',
-    description: ''
+    description: '',
+    schedule: []
   });
   const [editingCourse, setEditingCourse] = useState<Partial<Course>>({});
   const itemsPerPage = 10;
@@ -201,7 +210,8 @@ const CourseManagementPage: React.FC = () => {
           description: newCourse.description,
           // 直接使用外键ID字段，符合Prisma schema定义
           teacherId: newCourse.teacherId,
-          departmentId: newCourse.departmentId
+          departmentId: newCourse.departmentId,
+          schedule: newCourse.schedule || []
         }),
       });
 
@@ -216,7 +226,8 @@ const CourseManagementPage: React.FC = () => {
           departmentId: '',
           credits: 3,
           status: 'active',
-          description: ''
+          description: '',
+          schedule: []
         });
         toast.success('课程创建成功');
         // 重新获取课程列表
@@ -258,9 +269,9 @@ const CourseManagementPage: React.FC = () => {
           credits: editingCourse.credits,
           status: editingCourse.status,
           description: editingCourse.description,
-          // 直接使用外键ID字段，符合Prisma schema定义
           teacherId: editingCourse.teacherId,
-          departmentId: editingCourse.departmentId
+          departmentId: editingCourse.departmentId,
+          schedule: editingCourse.schedule || []
         }),
       });
 
@@ -322,7 +333,8 @@ const CourseManagementPage: React.FC = () => {
       departmentId: course.departmentId,
       credits: course.credits,
       status: course.status,
-      description: course.description
+      description: course.description,
+      schedule: course.schedule || []
     });
     setIsEditDialogOpen(true);
   };
