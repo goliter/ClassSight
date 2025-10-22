@@ -169,11 +169,15 @@ export async function createCourse(course: any) {
   });
 }
 
-//根据课程id查询课程
+//根据课程id查询课程（包含教师和学院信息）
 export async function getCourseById(id: string) {
   return prisma.course.findUnique({
     where: {
       id,
+    },
+    include: {
+      teacher: true,
+      department: true,
     },
   });
 }

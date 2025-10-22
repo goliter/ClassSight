@@ -86,19 +86,19 @@ const StudentDetailPage: React.FC<StudentDetailPageProps> = ({ params }) => {
         
         // 将API返回的数据映射到Student接口并更新状态
         const mappedStudentData: Student = {
-          id: student.studentId,
-          name: student.name || '未知',
-          studentId: student.studentId || '未知',
-          departmentId: student.departmentId || '',
-          departmentName: student.department?.name || '未知',
-          major: student.major || '未知',
-          grade: student.grade || '未知',
-          class: student.class || '未知',
-          email: student.email || '',
-          phone: student.phone || '',
-          enrollmentDate: student.enrollmentDate ? new Date(student.enrollmentDate).toLocaleDateString() : '未知',
-          status: (student.status as 'active' | 'suspended' | 'graduated') || 'active',
-          courseCount: student.courseCount || 0
+          id: student.data.studentId || studentId,
+          name: student.data.name || '未知',
+          studentId: student.data.studentId || '未知',
+          departmentId: student.data.departmentId || '',
+          departmentName: student.data.department?.name || '未知',
+          major: student.data.major || '未知',
+          grade: student.data.grade || '未知',
+          class: student.data.class || '未知',
+          email: student.data.email || '',
+          phone: student.data.phone || '',
+          enrollmentDate: student.data.enrollmentDate ? new Date(student.data.enrollmentDate).toLocaleDateString() : '未知',
+          status: (student.data.status as 'active' | 'suspended' | 'graduated') || 'active',
+          courseCount: student.data.courseCount || 0
         };
         
         setStudentData(mappedStudentData);
@@ -125,7 +125,7 @@ const StudentDetailPage: React.FC<StudentDetailPageProps> = ({ params }) => {
         const coursesData = await response.json();
         
         // 将API返回的数据映射到Course接口
-        const mappedCourses: Course[] = coursesData.map((courseEnrollment: any) => {
+        const mappedCourses: Course[] = coursesData.data.map((courseEnrollment: any) => {
           const course = courseEnrollment.course;
           // 为不同课程类型设置不同的背景颜色
           const bgColorMap: Record<string, string> = {

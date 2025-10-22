@@ -110,22 +110,22 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({ params }) => {
         
         // 格式化课程数据
         const formattedCourse: CourseFromDb = {
-          id: courseDataResult.id || '0',
-          code: courseDataResult.code || '',
-          name: courseDataResult.name || '未知课程',
-          description: courseDataResult.description || '暂无描述',
-          credits: typeof courseDataResult.credits === 'number' ? courseDataResult.credits : 0,
-          teacherName: courseDataResult.teacherName || courseDataResult.teacher?.name || '未知教师',
-          departmentName: courseDataResult.departmentName || courseDataResult.department?.name || '未知学院',
-          status: courseDataResult.status || 'inactive',
-          studentCount: typeof courseDataResult.studentCount === 'number' ? courseDataResult.studentCount : studentsDataResult.length,
-          schedule: courseDataResult.schedule || []
+          id: courseDataResult.data.id || '0',
+          code: courseDataResult.data.code || '',
+          name: courseDataResult.data.name || '未知课程',
+          description: courseDataResult.data.description || '暂无描述',
+          credits: typeof courseDataResult.data.credits === 'number' ? courseDataResult.data.credits : 0,
+          teacherName: courseDataResult.data.teacherName || courseDataResult.data.teacher?.name || '未知教师',
+          departmentName: courseDataResult.data.departmentName || courseDataResult.data.department?.name || '未知学院',
+          status: courseDataResult.data.status || 'inactive',
+          studentCount: typeof courseDataResult.data.studentCount === 'number' ? courseDataResult.data.studentCount : studentsDataResult.length,
+          schedule: courseDataResult.data.schedule || []
         };
         
         setCourseData(formattedCourse);
         
         // 格式化学生数据
-        const formattedStudents: Student[] = studentsDataResult.map((courseEnrollment: any) => {
+        const formattedStudents: Student[] = studentsDataResult.data.map((courseEnrollment: any) => {
           const student = courseEnrollment.student || courseEnrollment;
           return {
             id: student.id || student.studentId || '0',
