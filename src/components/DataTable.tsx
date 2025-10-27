@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from './ui/card';
 import { Button } from './ui/button';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from './ui/alert-dialog';
 import { Badge } from './ui/badge';
-import { Edit, Trash2 } from 'lucide-react';
+import { Edit, Trash2, Users } from 'lucide-react';
 
 interface ColumnDefinition<T> {
   header: string;
@@ -18,6 +18,7 @@ interface DataTableProps<T extends { id: string | number }> {
   columns: ColumnDefinition<T>[];
   onEdit: (item: T) => void;
   onDelete: (item: T) => void;
+  onManageStudents?: (item: T) => void;
   deleteDialogOpen: boolean;
   setDeleteDialogOpen: React.Dispatch<React.SetStateAction<boolean>>;
   selectedItem: T | null;
@@ -36,6 +37,7 @@ const DataTable: React.FC<DataTableProps<any>> = ({
   columns,
   onEdit,
   onDelete,
+  onManageStudents,
   deleteDialogOpen,
   setDeleteDialogOpen,
   selectedItem,
@@ -106,6 +108,16 @@ const DataTable: React.FC<DataTableProps<any>> = ({
                         >
                           <Edit className="h-4 w-4" />
                         </Button>
+                        {onManageStudents && (
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => onManageStudents(item)}
+                            className="text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20"
+                          >
+                            <Users className="h-4 w-4" />
+                          </Button>
+                        )}
                         <Button
                           variant="ghost"
                           size="sm"

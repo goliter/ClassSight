@@ -9,6 +9,7 @@ import { toast } from "sonner";
 import { Badge } from '@/components/ui/badge';
 import CourseAddDialog from "@/components/CourseAddDialog";
 import CourseEditDialog from "@/components/CourseEditDialog";
+import CourseStudentManagementDialog from "@/components/CourseStudentManagementDialog";
 import SearchBar from '@/components/SearchBar';
 import DataTable from '@/components/DataTable';
 import Pagination from '@/components/Pagination';
@@ -60,6 +61,7 @@ const CourseManagementPage: React.FC = () => {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCourse, setSelectedCourse] = useState<Course | null>(null);
+  const [isStudentManagementOpen, setIsStudentManagementOpen] = useState(false);
   const [newCourse, setNewCourse] = useState<Partial<Course>>({
     name: '',
     code: '',
@@ -345,6 +347,12 @@ const CourseManagementPage: React.FC = () => {
     setIsDeleteDialogOpen(true);
   };
 
+  // 打开学生管理对话框
+  const openStudentManagement = (course: Course) => {
+    setSelectedCourse(course);
+    setIsStudentManagementOpen(true);
+  };
+
   // 分页控制
   const goToPage = (page: number) => {
     if (page > 0 && page <= totalPages) {
@@ -434,6 +442,7 @@ const CourseManagementPage: React.FC = () => {
               ]}
               onEdit={openEditDialog}
               onDelete={handleDeleteCourse}
+              onManageStudents={openStudentManagement}
               deleteDialogOpen={isDeleteDialogOpen}
               setDeleteDialogOpen={setIsDeleteDialogOpen}
               selectedItem={selectedCourse}
@@ -484,6 +493,13 @@ const CourseManagementPage: React.FC = () => {
       />
 
       {/* 页脚 */}
+      {/* 学生管理对话框 */}
+      <CourseStudentManagementDialog
+        open={isStudentManagementOpen}
+        onOpenChange={setIsStudentManagementOpen}
+        selectedCourse={selectedCourse}
+      />
+
       <PageFooter />
     </div>
   );

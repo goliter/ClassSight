@@ -202,17 +202,6 @@ export async function updateCourse(id: string, data: any) {
 }
 
 
-//根据课程id查询课程的学生信息
-export async function getCourseStudents(id: string) {
-  return prisma.courseEnrollment.findMany({
-    where: {
-      courseId: id
-    },
-    include: {
-      student: true
-    }
-  });
-}
 
 //删除课程
 export async function deleteCourse(id: string) {
@@ -221,6 +210,168 @@ export async function deleteCourse(id: string) {
       id,
     },
   });
+}
+
+//添加学生到课程
+export async function addStudentToCourse(studentId: string, courseId: string) {
+  try {
+    // 验证学生是否存在
+    const studentExists = await prisma.student.findUnique({
+      where: { studentId }
+    });
+    
+    if (!studentExists) {
+      throw new Error(`学生不存在: ${studentId}`);
+    }
+    
+    // 验证课程是否存在
+    const courseExists = await prisma.course.findUnique({
+      where: { id: courseId }
+    });
+    
+    if (!courseExists) {
+      throw new Error(`课程不存在: ${courseId}`);
+    }
+    
+    // 检查学生是否已经在课程中
+    const existingEnrollment = await prisma.courseEnrollment.findUnique({
+      where: {
+        studentId_courseId: {
+          studentId,
+          courseId
+        }
+      }
+    });
+
+    // 如果已经存在关系，直接返回
+    if (existingEnrollment) {
+      return existingEnrollment;
+    }
+    
+    // 创建新的课程选修关系并更新计数
+    const [enrollment] = await prisma.$transaction([
+      prisma.courseEnrollment.create({
+        data: {
+          studentId,
+          courseId
+          // 移除status字段
+        }
+      }),
+      prisma.course.update({
+        where: { id: courseId },
+        data: {
+          studentCount: { increment: 1 }
+        }
+      })
+    ]);
+    
+    return enrollment;
+  } catch (error) {
+    console.error("添加学生到课程失败:", error);
+    throw error;
+  }
+}
+
+//从课程中移除学生
+export async function removeStudentFromCourse(studentId: string, courseId: string) {
+  try {
+    // 验证学生是否存在 - 使用id字段而不是studentId字段进行查询
+    const studentExists = await prisma.student.findUnique({
+      where: { studentId: studentId }
+    });
+    
+    if (!studentExists) {
+      throw new Error(`学生不存在: ${studentId}`);
+    }
+    
+    // 验证课程是否存在
+    const courseExists = await prisma.course.findUnique({
+      where: { id: courseId }
+    });
+    
+    if (!courseExists) {
+      throw new Error(`课程不存在: ${courseId}`);
+    }
+    
+    // 查找课程选修关系
+    const enrollment = await prisma.courseEnrollment.findUnique({
+      where: {
+        studentId_courseId: {
+          studentId,
+          courseId
+        }
+      }
+    });
+
+    // 如果存在关系，直接删除并更新计数
+    if (enrollment) {
+      // 使用事务确保删除和计数更新是原子操作
+      await prisma.$transaction([
+        prisma.courseEnrollment.delete({
+          where: {
+            studentId_courseId: {
+              studentId,
+              courseId
+            }
+          }
+        }),
+        prisma.course.update({
+          where: { id: courseId },
+          data: {
+            studentCount: { decrement: 1 }
+          }
+        })
+      ]);
+    }
+    
+    // 无论关系是否存在，都返回成功
+    return true;
+  } catch (error) {
+    console.error("从课程中移除学生失败:", error);
+    throw error;
+  }
+}
+
+//获取课程的所有学生
+export async function getCourseStudents(courseId: string) {
+  const enrollments = await prisma.courseEnrollment.findMany({
+    where: {
+      courseId
+    },
+    include: {
+      student: {
+        include: {
+          department: true
+        }
+      }
+    }
+  });
+
+  const result: Array<{
+    id: string;
+    name: string;
+    studentId: string;
+    departmentName: string;
+    majorName: string;
+    grade?: string;
+  }> = [];
+
+  // 遍历并进行严格的空值检查
+  for (const enrollment of enrollments) {
+    // 只处理student不为null的记录
+    if (enrollment.student) {
+      result.push({
+        id: enrollment.student.studentId,
+        name: enrollment.student.name,
+        studentId: enrollment.student.studentId,
+        departmentName: enrollment.student.department?.name || '',
+        majorName: enrollment.student.major || '',
+        grade: enrollment.student.grade
+      });
+    }
+  }
+
+  return result;
 }
 
 //新建学院
