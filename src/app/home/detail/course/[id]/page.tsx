@@ -132,7 +132,7 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({ params }) => {
             name: student.name || '未知学生',
             studentId: student.studentId || '未知学号',
             departmentName: student.departmentName || student.department?.name || '未知学院',
-            major: student.major || student.major?.name || '未知专业',
+            major: student.major || student.majorName || '未知专业',
             grade: student.grade || '未知年级',
             class: student.class || '未知班级',
             email: student.email || '',
@@ -362,9 +362,7 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({ params }) => {
                         <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">学号</th>
                         <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">学院</th>
                         <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">专业</th>
-                        <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">年级班级</th>
-                        <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">邮箱</th>
-                        <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">电话</th>
+                        <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">年级</th>
                         <th className="py-4 px-6 text-left text-sm font-semibold text-gray-600 dark:text-gray-300">状态</th>
                       </tr>
                     </thead>
@@ -387,15 +385,9 @@ const CourseDetailPage: React.FC<CourseDetailPageProps> = ({ params }) => {
                             <td className="py-4 px-6 text-sm">
                               <div className="flex items-center">
                                 <GraduationCap className="h-4 w-4 mr-2 text-green-500" />
-                                {student.grade}级{student.class}
+                                {student.grade}级
                               </div>
                             </td>
-                            <td className="py-4 px-6 text-sm">
-                              <a href={`mailto:${student.email}`} className="text-blue-600 dark:text-blue-400 hover:underline">
-                                {student.email}
-                              </a>
-                            </td>
-                            <td className="py-4 px-6 text-sm">{student.phone}</td>
                             <td className="py-4 px-6 text-sm">
                               <Badge className={`${getStatusBadge(student.status)}`}>
                                 {getStatusText(student.status)}

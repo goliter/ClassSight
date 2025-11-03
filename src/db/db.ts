@@ -69,7 +69,12 @@ export async function getStudentCourses(studentId: string) {
       studentId
     },
     include: {
-      course: true
+      course: {
+        include: {
+          teacher: true,
+          department: true
+        }
+      }
     }
   });
 }

@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useParams } from "next/navigation";
 import { User, Mail, Phone, BookOpen, Building2, GraduationCap, Calendar, Clock, Award, ChevronLeft } from "lucide-react";
 import CourseList from "@/components/CourseList";
 
@@ -40,7 +40,8 @@ interface Course {
 
 const StudentDetailPage: React.FC<StudentDetailPageProps> = ({ params }) => {
   const router = useRouter();
-  const studentId = params.id;
+  const routeParams = useParams();
+  const studentId = routeParams.id as string;
   
   // 使用useState管理学生数据状态
   const [studentData, setStudentData] = useState<Student>({
@@ -61,9 +62,14 @@ const StudentDetailPage: React.FC<StudentDetailPageProps> = ({ params }) => {
   
   // 使用useState管理课程数据状态
   const [studentCourses, setStudentCourses] = useState<Course[]>([]);
+  // 添加loading状态
+  const [loading, setLoading] = useState<boolean>(true);
   
   // 使用useEffect获取学生数据
   useEffect(() => {
+    // 设置loading为true
+    setLoading(true);
+    
     const fetchStudentData = async () => {
       try {
         const response = await fetch(`/api/student/${studentId}`, {
@@ -98,7 +104,7 @@ const StudentDetailPage: React.FC<StudentDetailPageProps> = ({ params }) => {
           phone: student.data.phone || '',
           enrollmentDate: student.data.enrollmentDate ? new Date(student.data.enrollmentDate).toLocaleDateString() : '未知',
           status: (student.data.status as 'active' | 'suspended' | 'graduated') || 'active',
-          courseCount: student.data.courseCount || 0
+          courseCount: student.data.courseEnrollments?.length || 0
         };
         
         setStudentData(mappedStudentData);
@@ -107,6 +113,7 @@ const StudentDetailPage: React.FC<StudentDetailPageProps> = ({ params }) => {
         // 错误情况下保持默认数据
       }
     };
+    
     
     // 获取学生课程数据
     const fetchStudentCourses = async () => {
@@ -135,13 +142,55 @@ const StudentDetailPage: React.FC<StudentDetailPageProps> = ({ params }) => {
             '实践课': 'bg-amber-500 dark:bg-amber-700'
           };
           
+          // 将schedule对象转换为字符串格式
+          const formatSchedule = (schedule: any): string => {
+            if (!schedule) {
+              return "暂无课程安排";
+            }
+
+            // 处理可能的JSON对象或字符串
+            try {
+              // 处理数组类型的schedule，只显示第一个元素
+              if (Array.isArray(schedule) && schedule.length > 0) {
+                const firstItem = schedule[0];
+                if (typeof firstItem === "object" && firstItem !== null) {
+                  // 构建第一个时间的字符串
+                  const parts = [];
+                  if (firstItem.date) parts.push(firstItem.date);
+                  if (firstItem.time) parts.push(firstItem.time);
+                  if (firstItem.location || firstItem.place)
+                    parts.push(firstItem.location || firstItem.place);
+                  return parts.join(" ");
+                }
+                return String(firstItem);
+              }
+
+              if (typeof schedule === "string") {
+                // 如果已经是字符串，直接返回
+                return schedule;
+              } else if (typeof schedule === "object") {
+                // 如果是对象，尝试转换为可读性较好的字符串
+                const scheduleEntries = Object.entries(schedule);
+                if (scheduleEntries.length > 0) {
+                  return scheduleEntries
+                    .map(([day, time]) => `${day}: ${time}`)
+                    .join(", ");
+                }
+              }
+            } catch (error) {
+              console.error("格式化课程安排失败:", error);
+            }
+
+            return "暂无课程安排";
+          };
+          
           return {
             id: course.id,
             name: course.name || '未知课程',
-            teacher: course.teacherName || '未知教师',
-            department: course.departmentName || '未知院系',
+            teacher: course.teacher.name || '未知教师',
+            department: course.department.name || '未知院系',
             type: course.type || '未知类型',
-            schedule: course.schedule || '未知时间',
+            schedule: formatSchedule(course.schedule),
             bgColor: bgColorMap[course.type] || 'bg-gray-500 dark:bg-gray-700'
           };
         });
@@ -158,7 +207,10 @@ const StudentDetailPage: React.FC<StudentDetailPageProps> = ({ params }) => {
     Promise.all([
       fetchStudentData(),
       fetchStudentCourses()
-    ]);
+    ]).finally(() => {
+      // 无论请求成功失败，都设置loading为false
+      setLoading(false);
+    });
   }, [studentId]);
   
 
@@ -177,6 +229,19 @@ const StudentDetailPage: React.FC<StudentDetailPageProps> = ({ params }) => {
   };
 
   const statusInfo = getStatusInfo(studentData.status);
+
+  // 加载状态显示
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100 transition-colors duration-300 flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-blue-500 mb-4"></div>
+          <h2 className="text-xl font-semibold text-gray-700 dark:text-gray-300">正在加载学生信息...</h2>
+          <p className="text-gray-500 dark:text-gray-400 mt-2">请稍候，我们正在获取相关数据</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 text-gray-900 dark:text-gray-100 transition-colors duration-300">
@@ -199,16 +264,22 @@ const StudentDetailPage: React.FC<StudentDetailPageProps> = ({ params }) => {
               <div className="w-32 h-32 bg-white dark:bg-gray-700 rounded-full border-4 border-white dark:border-gray-800 flex items-center justify-center shadow-lg">
                 <User className="h-16 w-16 text-gray-400 dark:text-gray-500" />
               </div>
-              
+
               {/* 姓名和状态 */}
               <div className="flex-1">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">{studentData.name}</h1>
-                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusInfo.bgColor} ${statusInfo.textColor}`}>
+                  <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                    {studentData.name}
+                  </h1>
+                  <span
+                    className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${statusInfo.bgColor} ${statusInfo.textColor}`}
+                  >
                     {statusInfo.text}
                   </span>
                 </div>
-                <p className="text-lg text-gray-500 dark:text-gray-400">学号：{studentData.studentId}</p>
+                <p className="text-lg text-gray-500 dark:text-gray-400">
+                  学号：{studentData.studentId}
+                </p>
               </div>
             </div>
           </div>
@@ -222,25 +293,35 @@ const StudentDetailPage: React.FC<StudentDetailPageProps> = ({ params }) => {
               <User className="h-5 w-5 mr-2 text-blue-500" />
               基本信息
             </h2>
-            
+
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-4 pb-4 border-b border-gray-100 dark:border-gray-700">
-                <div className="col-span-1 text-gray-500 dark:text-gray-400">姓名</div>
+                <div className="col-span-1 text-gray-500 dark:text-gray-400">
+                  姓名
+                </div>
                 <div className="col-span-2 font-medium">{studentData.name}</div>
               </div>
               <div className="grid grid-cols-3 gap-4 pb-4 border-b border-gray-100 dark:border-gray-700">
-                <div className="col-span-1 text-gray-500 dark:text-gray-400">学号</div>
-                <div className="col-span-2 font-medium">{studentData.studentId}</div>
+                <div className="col-span-1 text-gray-500 dark:text-gray-400">
+                  学号
+                </div>
+                <div className="col-span-2 font-medium">
+                  {studentData.studentId}
+                </div>
               </div>
               <div className="grid grid-cols-3 gap-4 pb-4 border-b border-gray-100 dark:border-gray-700">
-                <div className="col-span-1 text-gray-500 dark:text-gray-400">邮箱</div>
+                <div className="col-span-1 text-gray-500 dark:text-gray-400">
+                  邮箱
+                </div>
                 <div className="col-span-2 font-medium flex items-center">
                   <Mail className="h-4 w-4 mr-2 text-blue-500" />
                   {studentData.email}
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-1 text-gray-500 dark:text-gray-400">电话</div>
+                <div className="col-span-1 text-gray-500 dark:text-gray-400">
+                  电话
+                </div>
                 <div className="col-span-2 font-medium flex items-center">
                   <Phone className="h-4 w-4 mr-2 text-blue-500" />
                   {studentData.phone}
@@ -255,26 +336,40 @@ const StudentDetailPage: React.FC<StudentDetailPageProps> = ({ params }) => {
               <GraduationCap className="h-5 w-5 mr-2 text-purple-500" />
               学籍信息
             </h2>
-            
+
             <div className="space-y-4">
               <div className="grid grid-cols-3 gap-4 pb-4 border-b border-gray-100 dark:border-gray-700">
-                <div className="col-span-1 text-gray-500 dark:text-gray-400">学院</div>
+                <div className="col-span-1 text-gray-500 dark:text-gray-400">
+                  学院
+                </div>
                 <div className="col-span-2 font-medium flex items-center">
                   <Building2 className="h-4 w-4 mr-2 text-purple-500" />
                   {studentData.departmentName}
                 </div>
               </div>
               <div className="grid grid-cols-3 gap-4 pb-4 border-b border-gray-100 dark:border-gray-700">
-                <div className="col-span-1 text-gray-500 dark:text-gray-400">专业</div>
-                <div className="col-span-2 font-medium">{studentData.major}</div>
+                <div className="col-span-1 text-gray-500 dark:text-gray-400">
+                  专业
+                </div>
+                <div className="col-span-2 font-medium">
+                  {studentData.major}
+                </div>
               </div>
               <div className="grid grid-cols-3 gap-4 pb-4 border-b border-gray-100 dark:border-gray-700">
-                <div className="col-span-1 text-gray-500 dark:text-gray-400">年级</div>
-                <div className="col-span-2 font-medium">{studentData.grade}</div>
+                <div className="col-span-1 text-gray-500 dark:text-gray-400">
+                  年级
+                </div>
+                <div className="col-span-2 font-medium">
+                  {studentData.grade}
+                </div>
               </div>
               <div className="grid grid-cols-3 gap-4">
-                <div className="col-span-1 text-gray-500 dark:text-gray-400">班级</div>
-                <div className="col-span-2 font-medium">{studentData.class}</div>
+                <div className="col-span-1 text-gray-500 dark:text-gray-400">
+                  班级
+                </div>
+                <div className="col-span-2 font-medium">
+                  {studentData.class}
+                </div>
               </div>
             </div>
           </div>
@@ -286,23 +381,33 @@ const StudentDetailPage: React.FC<StudentDetailPageProps> = ({ params }) => {
             <BookOpen className="h-5 w-5 mr-2 text-green-500" />
             其他信息
           </h2>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <Calendar className="h-6 w-6 text-blue-500 mb-2" />
-              <div className="text-sm text-gray-500 dark:text-gray-400">入学日期</div>
-              <div className="font-medium mt-1">{studentData.enrollmentDate}</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                入学日期
+              </div>
+              <div className="font-medium mt-1">
+                {studentData.enrollmentDate}
+              </div>
             </div>
-            
+
             <div className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <Award className="h-6 w-6 text-purple-500 mb-2" />
-              <div className="text-sm text-gray-500 dark:text-gray-400">当前状态</div>
-              <div className={`font-medium mt-1 ${statusInfo.textColor}`}>{statusInfo.text}</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                当前状态
+              </div>
+              <div className={`font-medium mt-1 ${statusInfo.textColor}`}>
+                {statusInfo.text}
+              </div>
             </div>
-            
+
             <div className="flex flex-col items-center justify-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
               <Clock className="h-6 w-6 text-green-500 mb-2" />
-              <div className="text-sm text-gray-500 dark:text-gray-400">当前课程</div>
+              <div className="text-sm text-gray-500 dark:text-gray-400">
+                当前课程
+              </div>
               <div className="font-medium mt-1">{studentData.courseCount}门</div>
             </div>
           </div>
@@ -316,9 +421,9 @@ const StudentDetailPage: React.FC<StudentDetailPageProps> = ({ params }) => {
               正在修读的课程
             </h2>
           </div>
-          
+
           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6">
-            <CourseList 
+            <CourseList
               courses={studentCourses}
               isStudentView={true} // 设置为学生视图，即为只读模式
             />

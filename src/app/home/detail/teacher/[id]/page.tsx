@@ -140,19 +140,19 @@ const TeacherDetailPage: React.FC<TeacherDetailPageProps> = ({ params }) => {
             hireDate: teacherDataResult.data.hireDate ? new Date(teacherDataResult.data.hireDate) : new Date(),
             status: (teacherDataResult.data.status as "active" | "onLeave" | "resigned") || "active",
             department: teacherDataResult.data.departmentName || "",
-            courses: coursesDataResult
+            courses: coursesDataResult.data || []
           });
 
           // 重新格式化课程数据，确保与CourseList组件的Course接口完全匹配
           const formattedCourses: Course[] = [];
-          if (coursesDataResult && coursesDataResult.length > 0) {
-            formattedCourses.push(...coursesDataResult.map((course: any) => ({
-              id: course.data.id || `course-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-              name: course.data.name || "未命名课程",
-              teacher: teacherDataResult.name,
-              department: teacherDataResult.department?.name || course.data.departmentName || "",
-              type: course.data.type || "专业课程",
-              schedule: formatSchedule(course.data.schedule),
+          if (coursesDataResult.data && coursesDataResult.data.length > 0) {
+            formattedCourses.push(...coursesDataResult.data.map((course: any) => ({
+              id: course.id || `course-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+              name: course.name || "未命名课程",
+              teacher: teacherDataResult.data.name || "",
+              department: teacherDataResult.data.departmentName || course.departmentName || "",
+              type: course.type || "专业课程",
+              schedule: formatSchedule(course.schedule),
               bgColor: getRandomColor(),
             })));
           }
@@ -447,6 +447,20 @@ const formatSchedule = (schedule: any): string => {
   
   // 处理可能的JSON对象或字符串
   try {
+    // 处理数组类型的schedule，只显示第一个元素
+    if (Array.isArray(schedule) && schedule.length > 0) {
+      const firstItem = schedule[0];
+      if (typeof firstItem === 'object' && firstItem !== null) {
+        // 构建第一个时间的字符串
+        const parts = [];
+        if (firstItem.date) parts.push(firstItem.date);
+        if (firstItem.time) parts.push(firstItem.time);
+        if (firstItem.location || firstItem.place) parts.push(firstItem.location || firstItem.place);
+        return parts.join(' ');
+      }
+      return String(firstItem);
+    }
+    
     if (typeof schedule === 'string') {
       // 如果已经是字符串，直接返回
       return schedule;
