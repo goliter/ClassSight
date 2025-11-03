@@ -221,7 +221,7 @@ const DepartmentManagementPage: React.FC = () => {
         <div className="bg-white dark:bg-[oklch(0.205_0_0)] rounded-xl shadow-md p-6 mb-6">
           <h1 className="text-2xl font-bold mb-2">学院管理</h1>
           <p className="text-gray-500 dark:text-gray-400 mb-6">
-            管理所有学院信息、教师和学生数据
+            管理所有学院信息
           </p>
         </div>
 

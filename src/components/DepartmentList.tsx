@@ -47,9 +47,6 @@ const DepartmentList: React.FC<DepartmentListProps> = ({
               <tr className="border-b border-gray-200 dark:border-gray-700">
                 <th className="py-3 text-left font-semibold">学院名称</th>
                 <th className="py-3 text-left font-semibold">学院代码</th>
-                <th className="py-3 text-left font-semibold">学生人数</th>
-                <th className="py-3 text-left font-semibold">教师人数</th>
-                <th className="py-3 text-left font-semibold">课程数量</th>
                 <th className="py-3 text-left font-semibold">操作</th>
               </tr>
             </thead>
@@ -65,21 +62,7 @@ const DepartmentList: React.FC<DepartmentListProps> = ({
                       <div className="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-1">{dept.description}</div>
                     </td>
                     <td className="py-4">{dept.code}</td>
-                    <td className="py-4">
-                      <Badge variant="outline" className="bg-blue-50 text-blue-700 dark:bg-blue-900/20 dark:text-blue-400">
-                        {dept.studentCount}
-                      </Badge>
-                    </td>
-                    <td className="py-4">
-                      <Badge variant="outline" className="bg-green-50 text-green-700 dark:bg-green-900/20 dark:text-green-400">
-                        {dept.teacherCount}
-                      </Badge>
-                    </td>
-                    <td className="py-4">
-                      <Badge variant="outline" className="bg-purple-50 text-purple-700 dark:bg-purple-900/20 dark:text-purple-400">
-                        {dept.courseCount}
-                      </Badge>
-                    </td>
+                    
                     <td className="py-4">
                       <div className="flex space-x-2">
                         <Button
